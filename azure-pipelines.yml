@@ -11,5 +11,6 @@ pool:
 
 steps:
 - script: |
+    sudo apt-get install make qemu gcc gnu-efi
     make
   displayName: 'make'
