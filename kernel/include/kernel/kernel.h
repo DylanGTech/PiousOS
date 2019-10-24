@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 #include "bootloader/bootloader.h"
 
@@ -17,6 +18,6 @@
 
 
 void Initialize_System(LOADER_PARAMS* Parameters);
-void Abort();
+void Abort(uint64_t errorCode);
 
 #endif

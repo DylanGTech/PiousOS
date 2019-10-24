@@ -1,5 +1,3 @@
-DEFAULT_ARCH=x86_64
-DEFAULT_HOST=$(DEFAULT_ARCH)-elf
 HOST?=DEFAULT_HOST
 
 CFLAGS?=-O2 -g
@@ -13,8 +11,8 @@ EXEC_PREFIX?=$(PREFIX)
 BOOTDIR?=$(EXEC_PREFIX)/EFI/BOOT
 INCLUDEDIR?=$(PREFIX)/include
 
-CFLAGS:=$(CFLAGS) -fno-stack-protector -fpic \
-				-fshort-wchar -O3 -ffreestanding -I/usr/include/efi -I/usr/include/efi/$(DEFAULT_ARCH) -I/usr/include/efi/protocal -I$(SHAREDDIR)/include
+CFLAGS:=$(CFLAGS) -fno-stack-protector -fpic -I$(SHAREDDIR)/include -fshort-wchar -O3 -ffreestanding \
+				-I/usr/include/efi -I/usr/include/efi/$(DEFAULT_ARCH) -I/usr/include/efi/protocol 
 CPPFLAGS:=$(CPPFLAGS) -Iinclude -D$(DEFAULT_ARCH) -I$(SHAREDDIR)/include
 LDFLAGS:=$(LDFLAGS) -nostdlib -znocombreloc -shared --warn-common --no-undefined -znocombreloc \
 		-Bsymbolic -L /usr/lib -Iinclude -I$(SHAREDDIR)/include
@@ -49,7 +47,7 @@ $(LIBS) \
 all: 
 
 BOOTX64.EFI: $(OBJS)
-	$(DEFAULT_ARCH)-elf-ld -T /usr/lib/elf_$(DEFAULT_ARCH)_efi.lds -o boot.so $(CFLAGS) $(LINK_LIST) -lefi -lgnuefi
+	$(DEFAULT_ARCH)-elf-ld -T /usr/lib/elf_$(DEFAULT_ARCH)_efi.lds -o boot.so $(CFLAGS) $(LINK_LIST) -lgnuefi -lefi
 
 	objcopy -j .text -j .sdata -j .data -j .dynamic \
 	-j .dynsym  -j .rel -j .rela -j .reloc \

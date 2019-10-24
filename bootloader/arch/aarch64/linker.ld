@@ -6,7 +6,7 @@ SECTIONS
 	/* Begin putting sections at 1 MiB, a conventional place for kernels to be
 	   loaded at by the bootloader. */
 	. = 1M;
-
+ 
 	/* Code */
 	.text BLOCK(4K) : ALIGN(4K)
 	{

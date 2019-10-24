@@ -1,6 +1,4 @@
-// Compile with GCC -O3 for best performance
-// It pretty much entirely negates the need to write these by hand in asm.
-#include "kernel/memory.h"
+#include "kernel/libc/string.h"
 
 void * memset (void *dest, const uint8_t val, size_t len)
 {

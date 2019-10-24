@@ -18,12 +18,4 @@ extern MemorySettings mainMemorySettings;
 void Initialize_Memory(UINTN MapSize, UINTN DescriptorSize, EFI_MEMORY_DESCRIPTOR *Map, UINT32 DescriptorVersion);
 uint64_t GetMaxMappedPhysicalAddress(void);
 
-
-
-void * memmove (void *dest, const void *src, size_t len);
-int memcmp (const void *str1, const void *str2, size_t count);
-int memcmp_eq (const void *str1, const void *str2, size_t count);
-void * memcpy (void *dest, const void *src, size_t len);
-void * memset (void *dest, const uint8_t val, size_t len);
-
 #endif

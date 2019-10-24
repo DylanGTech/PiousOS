@@ -1,8 +1,6 @@
-// Compile with GCC -O3 for best performance
-// It pretty much entirely negates the need to write these by hand in asm.
-#include "kernel/memory.h"
+#include "kernel/libc/string.h"
 
-// Default (8-bit, 1 byte at a time)
+
 void * memmove (void *dest, const void *src, size_t len)
 {
   const char *s = (char *)src;

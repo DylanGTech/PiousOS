@@ -16,12 +16,15 @@ typedef struct TextDisplaySettings {
 extern TextDisplaySettings mainTextDisplaySettings;
 
 
-void PrintString(unsigned char * str, EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE GPU, UINT32 foregroundcolor, UINT32 backgroundColor);
+void PrintString(unsigned char * str, EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE GPU, UINT32 foregroundcolor, UINT32 backgroundColor, ...);
+void PrintCharacter(unsigned char chr, EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE GPU, UINT32 foregroundColor, UINT32 backgroundColor);
+void ScrollUp(EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE GPU);
 void Initialize_Display(EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE GPU);
 void ColorScreen(EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE GPU, UINT32 color);
 
 #ifdef DEBUG_PIOUS
 void PrintDebugMessage(unsigned char * str);
+void PrintErrorCode(unsigned long code, unsigned char * message);
 #endif
 
 #endif

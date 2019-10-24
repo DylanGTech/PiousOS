@@ -1,5 +1,3 @@
-DEFAULT_ARCH=x86_64
-DEFAULT_HOST=$(DEFAULT_ARCH)-elf
 HOST?=DEFAULT_HOST
 
 CFLAGS?=-O2 -g
@@ -15,7 +13,8 @@ KERNELDIR?=/Pious
 INCLUDEDIR?=$(PREFIX)/include
 
 CFLAGS:=-fno-stack-protector -fpic \
-		-fshort-wchar -O3 -ffreestanding -I/usr/include/efi -I/usr/include/efi/$(DEFAULT_ARCH) -I/usr/include/efi/protocal -nostdlib $(DEBUG_FLAGS) -I$(SHAREDDIR)/include
+		-fshort-wchar -O3 -ffreestanding -nostdlib $(DEBUG_FLAGS) -I$(SHAREDDIR)/include \
+		-I/usr/include/efi -I/usr/include/efi/$(DEFAULT_ARCH) -I/usr/include/efi/protocol
 CPPFLAGS:=$(CPPFLAGS) -Iinclude -D$(DEFAULT_ARCH) $(DEBUG_FLAGS) -I$(SHAREDDIR)/indlude
 LDFLAGS:=$(LDFLAGS) -nostdlib -znocombreloc -shared --warn-common --no-undefined -znocombreloc \
 		-Bsymbolic -L /usr/lib -Iinclude -I$(SHAREDDIR)/include
@@ -36,10 +35,10 @@ $(KERNEL_ARCH_OBJS) \
 kernel/kernel.o \
 kernel/graphics.o \
 kernel/memory.o \
-kernel/memcmp.o \
-kernel/memcpy.o \
-kernel/memmove.o \
-kernel/memset.o
+kernel/libc/memcmp.o \
+kernel/libc/memcpy.o \
+kernel/libc/memmove.o \
+kernel/libc/memset.o
 
 OBJS=\
 $(KERNEL_OBJS) \

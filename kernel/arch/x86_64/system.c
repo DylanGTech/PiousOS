@@ -155,10 +155,10 @@ void Initialize_System(LOADER_PARAMS* Parameters)
 #endif
 }
 
-void Abort()
+void Abort(uint64_t errorCode)
 {
     #ifdef DEBUG_PIOUS
-        PrintDebugMessage("Error: <add info here>");
+        PrintErrorCode(errorCode, "");
     #else
         PrintString("ERROR", mainTextDisplaySettings.defaultGPU, mainTextDisplaySettings.font_color, mainTextDisplaySettings.background_color);
     #endif

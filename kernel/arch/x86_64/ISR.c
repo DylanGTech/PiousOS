@@ -519,14 +519,14 @@ void User_ISR_handler(INTERRUPT_FRAME * i_frame)
     //
 
     default:
-        Abort();
+        Abort(0xFFFFFFFFFFFFFFFF);
       break;
   }
 }
 
 void CPU_ISR_handler(INTERRUPT_FRAME * i_frame)
 {
-    Abort();
+    Abort(0xFFFFFFFFFFFFFFFF);
 }
 
 
@@ -537,91 +537,91 @@ void CPU_ISR_handler(INTERRUPT_FRAME * i_frame)
 // Vector 0
 void DE_ISR_handler(INTERRUPT_FRAME * i_frame) // Fault #DE: Divide Error (divide by 0 or not enough bits in destination)
 {
-    Abort();
+    Abort(0);
 }
 
 // Vector 1
 void DB_ISR_handler(INTERRUPT_FRAME * i_frame) // Fault/Trap #DB: Debug Exception
 {
-    Abort();
+    Abort(1);
 }
 
 // Vector 2
 void NMI_ISR_handler(INTERRUPT_FRAME * i_frame) // NMI (Nonmaskable External Interrupt)
 {
-    Abort();
+    Abort(2);
 }
 
 // Vector 3
 void BP_ISR_handler(INTERRUPT_FRAME * i_frame) // Trap #BP: Breakpoint (INT3 instruction)
 {
-    Abort();
+    Abort(3);
 }
 
 // Vector 4
 void OF_ISR_handler(INTERRUPT_FRAME * i_frame) // Trap #OF: Overflow (INTO instruction)
 {
-    Abort();
+    Abort(4);
 }
 
 // Vector 5
 void BR_ISR_handler(INTERRUPT_FRAME * i_frame) // Fault #BR: BOUND Range Exceeded (BOUND instruction)
 {
-    Abort();
+    Abort(5);
 }
 
 // Vector 6
 void UD_ISR_handler(INTERRUPT_FRAME * i_frame) // Fault #UD: Invalid or Undefined Opcode
 {
-    Abort();
+    Abort(6);
 }
 
 // Vector 7
 void NM_ISR_handler(INTERRUPT_FRAME * i_frame) // Fault #NM: Device Not Available Exception
 {
-    Abort();
+    Abort(7);
 }
 
 // Vector 8
 void DF_EXC_handler(EXCEPTION_FRAME * e_frame) // Abort #DF: Double Fault (error code is always 0)
 {
-    Abort();
+    Abort(8);
 }
 
 // Vector 9
 void CSO_ISR_handler(INTERRUPT_FRAME * i_frame) // Fault (i386): Coprocessor Segment Overrun (long since obsolete, included for completeness)
 {
-    Abort();
+    Abort(9);
 }
 
 // Vector 10
 void TS_EXC_handler(EXCEPTION_FRAME * e_frame) // Fault #TS: Invalid TSS
 {
-    Abort();
+    Abort(10);
 }
 
 // Vector 11
 void NP_EXC_handler(EXCEPTION_FRAME * e_frame) // Fault #NP: Segment Not Present
 {
-    Abort();
+    Abort(11);
 }
 
 // Vector 12
 void SS_EXC_handler(EXCEPTION_FRAME * e_frame) // Fault #SS: Stack Segment Fault
 {
-    Abort();
+    Abort(12);
 }
 
 // Vector 13
 void GP_EXC_handler(EXCEPTION_FRAME * e_frame) // Fault #GP: General Protection
 {
-    Abort();
+    Abort(13);
 }
 
 // Vector 14
 void PF_EXC_handler(EXCEPTION_FRAME * e_frame) // Fault #PF: Page Fault
 {
-    Abort();
+    Abort(14);
 }
 
 // Vector 15 (Reserved)
@@ -630,31 +630,31 @@ void PF_EXC_handler(EXCEPTION_FRAME * e_frame) // Fault #PF: Page Fault
 // Vector 16
 void MF_ISR_handler(INTERRUPT_FRAME * i_frame) // Fault #MF: Math Error (x87 FPU Floating-Point Math Error)
 {
-    Abort();
+    Abort(16);
 }
 
 // Vector 17
 void AC_EXC_handler(EXCEPTION_FRAME * e_frame) // Fault #AC: Alignment Check (error code is always 0)
 {
-    Abort();
+    Abort(17);
 }
 
 // Vector 18
 void MC_ISR_handler(INTERRUPT_FRAME * i_frame) // Abort #MC: Machine Check
 {
-    Abort();
+    Abort(18);
 }
 
 // Vector 19
 void XM_ISR_handler(INTERRUPT_FRAME * i_frame) // Fault #XM: SIMD Floating-Point Exception (SSE instructions)
 {
-    Abort();
+    Abort(19);
 }
 
 // Vector 20
 void VE_ISR_handler(INTERRUPT_FRAME * i_frame) // Fault #VE: Virtualization Exception
 {
-    Abort();
+    Abort(20);
 }
 
 // Vectors 21-29 (Reserved)
@@ -662,5 +662,5 @@ void VE_ISR_handler(INTERRUPT_FRAME * i_frame) // Fault #VE: Virtualization Exce
 // Vector 30
 void SX_EXC_handler(EXCEPTION_FRAME * e_frame) // Fault #SX: Security Exception
 {
-    Abort();
+    Abort(30);
 }
