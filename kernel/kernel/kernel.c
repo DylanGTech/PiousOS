@@ -41,11 +41,9 @@ void kernel_main(LOADER_PARAMS * LP) // Loader Parameters
 #endif
 
     Initialize_System(LP);
-    
-    PrintString("Hello!\n", mainTextDisplaySettings.defaultGPU, mainTextDisplaySettings.font_color, mainTextDisplaySettings.background_color);
 
-    //PrintString("%d\n", mainTextDisplaySettings.defaultGPU, mainTextDisplaySettings.font_color, mainTextDisplaySettings.background_color, -123456);
     
+
     while(1)
     {
 

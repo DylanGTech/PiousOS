@@ -1,6 +1,6 @@
 HOST?=DEFAULT_HOST
 
-CFLAGS?=-O2 -g
+CFLAGS?=-O3 -g
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -35,10 +35,7 @@ $(KERNEL_ARCH_OBJS) \
 kernel/kernel.o \
 kernel/graphics.o \
 kernel/memory.o \
-kernel/libc/memcmp.o \
-kernel/libc/memcpy.o \
-kernel/libc/memmove.o \
-kernel/libc/memset.o
+
 
 OBJS=\
 $(KERNEL_OBJS) \

@@ -20,7 +20,7 @@ SHAREDDIR=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))shared
 
 DEBUG_FLAGS=-DDEBUG_PIOUS
 
-CFLAGS='-O2 -g'
+CFLAGS=-O3 -g
 CPPFLAGS=''
 
 # Configure the cross-compiler to use the desired system root.
