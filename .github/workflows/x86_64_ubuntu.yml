@@ -10,6 +10,6 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: setup
-      run: sudo ./setup.sh
+      run: ./setup.sh
     - name: make
       run: make
