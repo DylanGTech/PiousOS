@@ -8,7 +8,7 @@ cd Compiler-$1
 mkdir src
 cd src
 
-ftp -in ftp.gnu.org << SCRIPTEND
+ftp -inp ftp.gnu.org << SCRIPTEND
 user anonymous
 binary
 cd gnu/binutils
@@ -18,7 +18,7 @@ SCRIPTEND
 tar -xzf binutils-2.33.1.tar.gz
 
 
-ftp -in ftp.gnu.org << SCRIPTEND
+ftp -inp ftp.gnu.org << SCRIPTEND
 user anonymous
 binary
 cd gnu/gcc/gcc-9.2.0/
