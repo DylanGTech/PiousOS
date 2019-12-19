@@ -10,6 +10,8 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: setup
-      run: ./setup.sh
+      run: ./setup.sh x86_64
+    - name: update-shell
+      run: . ~/.bashrc  
     - name: make
       run: make

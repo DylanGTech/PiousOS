@@ -63,6 +63,7 @@ clean:
 	rm -f BOOTX64.EFI
 	rm -f $(OBJS) *.o */*.o */*/*.o
 	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
+	rm -f boot.so
 
 install: install-bootloader
 

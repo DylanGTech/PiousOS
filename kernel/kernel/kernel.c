@@ -42,7 +42,7 @@ void kernel_main(LOADER_PARAMS * LP) // Loader Parameters
 
     Initialize_System(LP);
 
-    
+    PrintString("Hello!\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor);
 
     while(1)
     {

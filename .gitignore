@@ -1,4 +1,5 @@
 sysroot
+Compiler-*
 *.img
 
 # Prerequisites
@@ -7,6 +8,7 @@ sysroot
 # Object files
 *.o
 *.ko
+*.so
 *.obj
 *.elf
 

@@ -1,13 +1,12 @@
 # PiousOS
 PiousOS is a simple system for modern hardware. It boots and runs via UEFI and is henceforth being designed with modularity in mind. x86_64 is currently the only supported platform, and currently the internals simply boots to "Hello!" with interrupts and paging enabled.
 
-## Building
-Building is designed for a Linux host. Currently tested with Ubuntu. Install the required packages with apt:
+## Setup Envornment
+Building is designed for a Linux host. Currently tested with Ubuntu. Install the required packages and build the necessary cross-compiler with the setup script (only needs to be run once)
 ```
-sudo apt-get install make qemu gcc gnu-efi
+./setup.sh x86_64
 ```
-A GCC cross-compiler for ELF is required for the platform you are compiling it for. x86_64 is the default
-
+The compiler will be used to create the executables used by PiousOS
 ## Running
 Because PiousOS is dependant on UEFI, firmware must support it.
 
