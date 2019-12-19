@@ -1,6 +1,6 @@
 #!/bin/sh
 # setup.sh (builds cross-compiler and references it in the PATH)
-sudo apt-get install make qemu gcc gnu-efi bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo
+sudo apt-get install make gcc gnu-efi bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo
 
 
 mkdir Compiler-$1
