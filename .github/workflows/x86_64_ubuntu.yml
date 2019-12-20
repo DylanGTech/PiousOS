@@ -12,8 +12,8 @@ jobs:
     - name: setup
       run: ./setup.sh x86_64 $COMPILER_PATH
       env:
-        COMPILER_PATH: /home/Compiler-x86_64
+        COMPILER_PATH: /home/runner/work/PiousOS/PiousOS/Compiler-x86_64
     - name: make
       run: make COMPILER_PATH=$COMPILER_PATH
       env:
-        COMPILER_PATH: /home/Compiler-x86_64
+        COMPILER_PATH: /home/runner/work/PiousOS/PiousOS/Compiler-x86_64
