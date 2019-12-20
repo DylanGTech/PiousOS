@@ -51,4 +51,4 @@ make install-gcc
 make install-target-libgcc
 
 
-echo export PATH=\"$PREFIX/bin:\$PATH\" >> ~/.bashrc
+echo export PATH=\"$PREFIX/bin:\$PATH\" >> ~/.profile
