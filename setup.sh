@@ -2,9 +2,8 @@
 # setup.sh (builds cross-compiler and references it in the PATH)
 sudo apt-get install make gcc gnu-efi bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo
 
-
-mkdir Compiler-$1
-cd Compiler-$1
+mkdir $2
+cd $2
 mkdir src
 cd src
 

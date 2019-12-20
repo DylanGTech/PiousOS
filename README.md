@@ -4,7 +4,7 @@ PiousOS is a simple system for modern hardware. It boots and runs via UEFI and i
 ## Setup Envornment
 Building is designed for a Linux host. Currently tested with Ubuntu. Install the required packages and build the necessary cross-compiler with the setup script (only needs to be run once)
 ```
-./setup.sh x86_64
+./setup.sh x86_64 Compiler-x86_64
 ```
 The compiler will be used to create the executables used by PiousOS
 ## Running

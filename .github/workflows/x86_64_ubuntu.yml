@@ -10,8 +10,10 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: setup
-      run: ./setup.sh x86_64
-    - name: update-shell
-      run: source ~/.profile
+      run: ./setup.sh x86_64 $COMPILER_PATH
+      env:
+        COMPILER_PATH: $GITHUB_WORKSPACE/Compiler-x86_64
     - name: make
-      run: make
+      run: make COMPILER_PATH=$COMPILER_PATH
+      env:
+        COMPILER_PATH: $GITHUB_WORKSPACE/Compiler-x86_64
