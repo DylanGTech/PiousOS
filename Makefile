@@ -2,7 +2,7 @@ PROJECTS=bootloader kernel
 DEFAULT_ARCH=x86_64
 DEFAULT_HOST=$(DEFAULT_ARCH)-elf
 
-export PATH := $(COMPILER_PATH)/bin
+export PATH:=$(COMPILER_PATH)/bin:$(PATH)
 
 MAKE=make
 ARCH=x86_64
