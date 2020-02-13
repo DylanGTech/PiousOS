@@ -12,11 +12,11 @@ BOOTDIR?=$(EXEC_PREFIX)/EFI/BOOT
 INCLUDEDIR?=$(PREFIX)/include
 
 CFLAGS:=$(CFLAGS) -fno-stack-protector -fpic -I$(SHAREDDIR)/include -fshort-wchar -O3 -ffreestanding \
-				-I/usr/include/efi -I/usr/include/efi/$(DEFAULT_ARCH) -I/usr/include/efi/protocol 
+		-I../gnu-efi/inc -I../gnu-efi/inc/$(DEFAULT_ARCH) -I../gnu-efi/inc/protocol
 CPPFLAGS:=$(CPPFLAGS) -Iinclude -D$(DEFAULT_ARCH) -I$(SHAREDDIR)/include
 LDFLAGS:=$(LDFLAGS) -nostdlib -znocombreloc -shared --warn-common --no-undefined -znocombreloc \
-		-Bsymbolic -L /usr/lib -Iinclude -I$(SHAREDDIR)/include
-LIBS:=$(LIBS) -nostdlib -lefi -lgnuefi
+		-Bsymbolic -Iinclude -I$(SHAREDDIR)/include
+LIBS:=$(LIBS) -nostdlib -L../gnu-efi/$(DEFAULT_ARCH)/gnuefi -L../gnu-efi/$(DEFAULT_ARCH)/lib -lefi -lgnuefi
 
 ARCHDIR=arch/$(DEFAULT_ARCH)
 
@@ -38,7 +38,7 @@ LINK_LIST=\
 $(LDFLAGS) \
 $(BOOTLOADER_OBJS) \
 $(LIBS) \
-/usr/lib/crt0-efi-$(DEFAULT_ARCH).o
+../gnu-efi/$(DEFAULT_ARCH)/gnuefi/crt0-efi-$(DEFAULT_ARCH).o
 
 
 .PHONY: all clean install install-bootloader
@@ -47,7 +47,7 @@ $(LIBS) \
 all: 
 
 BOOTX64.EFI: $(OBJS)
-	$(DEFAULT_ARCH)-elf-ld -T /usr/lib/elf_$(DEFAULT_ARCH)_efi.lds -o boot.so $(CFLAGS) $(LINK_LIST) -lgnuefi -lefi
+	$(DEFAULT_ARCH)-elf-ld -T ../gnu-efi/gnuefi/elf_$(DEFAULT_ARCH)_efi.lds -o boot.so $(CFLAGS) $(LINK_LIST) -L ../gnu-efi/$(DEFAULT_ARCH)/gnuefi -L ../gnu-efi/$(DEFAULT_ARCH)/lib -lefi -lgnuefi
 
 	objcopy -j .text -j .sdata -j .data -j .dynamic \
 	-j .dynsym  -j .rel -j .rela -j .reloc \

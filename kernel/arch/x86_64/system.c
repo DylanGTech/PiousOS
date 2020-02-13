@@ -165,3 +165,14 @@ void Abort(uint64_t errorCode)
 
     asm volatile("hlt");
 }
+
+//TODO: Use hardware acceration
+int16_t CompareMemory(const void * addr1, const void * addr2, uint64_t length)
+{
+    for(; length > 0; length--)
+    {
+        if(*((uint8_t *)addr1) != *((uint8_t *)addr2))
+            return *((uint8_t *)addr2) - *((uint8_t *)addr1);
+    }
+    return 0;
+}

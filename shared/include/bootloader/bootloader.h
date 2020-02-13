@@ -2,7 +2,6 @@
 #define _PIOUS_BOOTLOADER_H 1
 
 #include <efi.h>
-#include <efilib.h>
 #include <efiprot.h>
 
 

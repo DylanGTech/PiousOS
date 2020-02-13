@@ -62,8 +62,8 @@ void PrintErrorCode(unsigned long code, unsigned char * message)
         PrintString(" - ", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor);
     }
 
-    //TODO: Change to unsigned long for error codes
-    PrintString("Error Code: %d", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor, (int)code);
+
+    PrintString("Error Code: 0x%lX", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor, code);
 
 
 }
@@ -162,6 +162,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
             case 'i':
             case 'e':
             case 'E':
+            case 'f':
             case 'g':
             case 'G':
             case 'o':
@@ -185,8 +186,8 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
     UINT32 rowSize = mainTextDisplaySettings.defaultGPU.Info->VerticalResolution / (8 * mainTextDisplaySettings.scale);
     UINT32 colSize = (mainTextDisplaySettings.defaultGPU.Info->PixelsPerScanLine - backporch) / (8 * mainTextDisplaySettings.scale);
 
-    unsigned long value;
-    unsigned long value_cpy;
+    universal_long_t value;
+    universal_long_t value_cpy;
 
     unsigned char places;
     unsigned long divisor;
@@ -215,26 +216,26 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                 {
                 case 'd':
                 case 'i':
-                    value = va_arg(valist, long);
+                    value.l = va_arg(valist, long);
 
-                    if((signed long)value < 0)
+                    if((signed long)value.l < 0)
                     {
                         PrintCharacter('-', foregroundColor, backgroundColor);
-                        value = (unsigned long)((signed long)value * -1);
-                        //value ^= (1UL << 63);
+                        value.l = (unsigned long)((signed long)value.l * -1);
+                        //value.l ^= (1UL << 63);
 
 
-                        if((signed long)value == 0) //Check for max unsigned value, since the following arithmatic won't work on it after flipping the sign bit
+                        if((signed long)value.l == 0) //Check for max unsigned value, since the following arithmatic won't work on it after flipping the sign bit
                         {
                             PrintString("9223372036854775808", foregroundColor, backgroundColor);
                             break;
                         }
                     }
                     places = 0;
-                    value_cpy = value;
-                    while((signed long)value_cpy > 0)
+                    value_cpy.l = value.l;
+                    while((signed long)value_cpy.l > 0)
                     {
-                        value_cpy = (signed long)value_cpy / 10;
+                        value_cpy.l = (signed long)value_cpy.l / 10;
                         places++;
                     }
 
@@ -246,7 +247,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                         {
                             divisor = 1;
                             for(i = 1; i < places; i++) divisor *= 10;
-                            p = ((signed long)value / divisor) % 10;
+                            p = ((signed long)value.l / divisor) % 10;
                         
                             PrintCharacter(p + 48, foregroundColor, backgroundColor);
                             places--;
@@ -254,13 +255,13 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                     }
                     break;
                 case 'o':
-                    value = va_arg(valist, unsigned long);
+                    value.l = va_arg(valist, unsigned long);
 
                     places = 0;
-                    value_cpy = value;
-                    while(value_cpy > 0)
+                    value_cpy.l = value.l;
+                    while(value_cpy.l > 0)
                     {
-                        value_cpy /= 8;
+                        value_cpy.l /= 8;
                         places++;
                     }
 
@@ -272,7 +273,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                         {
                             divisor = 1;
                             for(i = 1; i < places; i++) divisor *= 8;
-                            p = (value / divisor) % 8;
+                            p = (value.l / divisor) % 8;
                         
                             PrintCharacter(p + 48, foregroundColor, backgroundColor);
                             places--;
@@ -280,13 +281,13 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                     }
                     break;
                 case 'u':
-                    value = va_arg(valist, unsigned long);
+                    value.l = va_arg(valist, unsigned long);
 
                     places = 0;
-                    value_cpy = value;
-                    while(value_cpy > 0)
+                    value_cpy.l = value.l;
+                    while(value_cpy.l > 0)
                     {
-                        value_cpy /= 10;
+                        value_cpy.l /= 10;
                         places++;
                     }
 
@@ -298,7 +299,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                         {
                             divisor = 1;
                             for(i = 1; i < places; i++) divisor *= 10;
-                            p = (value / divisor) % 10;
+                            p = (value.l / divisor) % 10;
                         
                             PrintCharacter(p + 48, foregroundColor, backgroundColor);
                             places--;
@@ -306,13 +307,13 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                     }
                     break;
                 case 'x':
-                    value = va_arg(valist, unsigned long);
+                    value.l = va_arg(valist, unsigned long);
 
                     places = 0;
-                    value_cpy = value;
-                    while(value_cpy > 0)
+                    value_cpy.l = value.l;
+                    while(value_cpy.l > 0)
                     {
-                        value_cpy /= 16;
+                        value_cpy.l /= 16;
                         places++;
                     }
 
@@ -324,7 +325,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                         {
                             divisor = 1;
                             for(i = 1; i < places; i++) divisor *= 16;
-                            p = (value / divisor) % 16;
+                            p = (value.l / divisor) % 16;
 
                             if(p > 9)
                                 PrintCharacter(p + 87, foregroundColor, backgroundColor);
@@ -335,13 +336,13 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                     }
                     break;
                 case 'X':
-                    value = va_arg(valist, unsigned long);
+                    value.l = va_arg(valist, unsigned long);
 
                     places = 0;
-                    value_cpy = value;
-                    while(value_cpy > 0)
+                    value_cpy.l = value.l;
+                    while(value_cpy.l > 0)
                     {
-                        value_cpy /= 16;
+                        value_cpy.l /= 16;
                         places++;
                     }
 
@@ -353,10 +354,10 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                         {
                             divisor = 1;
                             for(i = 1; i < places; i++) divisor *= 16;
-                            p = (value / divisor) % 16;
+                            p = (value.l / divisor) % 16;
 
                             if(p > 9)
-                                PrintCharacter(p + 66, foregroundColor, backgroundColor);
+                                PrintCharacter(p + 55, foregroundColor, backgroundColor);
                             else
                                 PrintCharacter(p + 48, foregroundColor, backgroundColor);
                             places--;
@@ -374,25 +375,25 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                 {
                 case 'd':
                 case 'i':
-                    value = (signed short)va_arg(valist, int);
+                    value.l = (signed short)va_arg(valist, int);
 
-                    if((signed short)value < 0)
+                    if((signed short)value.l < 0)
                     {
                         PrintCharacter('-', foregroundColor, backgroundColor);
-                        value = (unsigned long)((signed short)value * -1);
-                        //value ^= (1UL << 15);
+                        value.l = (unsigned long)((signed short)value.l * -1);
+                        //value.l ^= (1UL << 15);
 
-                        if((signed short)value == 0) //Check for max unsigned value, since the following arithmatic won't work on it after flipping the sign bit
+                        if((signed short)value.l == 0) //Check for max unsigned value, since the following arithmatic won't work on it after flipping the sign bit
                         {
                             PrintString("32768", foregroundColor, backgroundColor); //Check for max unsigned value, since the following arithmatic won't work on it after flipping the sign bit
                             break;
                         }
                     }
                     places = 0;
-                    value_cpy = value;
-                    while((signed short)value_cpy > 0)
+                    value_cpy.l = value.l;
+                    while((signed short)value_cpy.l > 0)
                     {
-                        value_cpy = (signed short)value_cpy / 10;
+                        value_cpy.l = (signed short)value_cpy.l / 10;
                         places++;
                     }
 
@@ -404,7 +405,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                         {
                             divisor = 1;
                             for(i = 1; i < places; i++) divisor *= 10;
-                            p = ((signed short)value / divisor) % 10;
+                            p = ((signed short)value.l / divisor) % 10;
                         
                             PrintCharacter(p + 48, foregroundColor, backgroundColor);
                             places--;
@@ -412,13 +413,13 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                     }
                     break;
                 case 'o':
-                    value = (unsigned short)va_arg(valist, unsigned int);
+                    value.l = (unsigned short)va_arg(valist, unsigned int);
 
                     places = 0;
-                    value_cpy = value;
-                    while((unsigned short)value_cpy > 0)
+                    value_cpy.l = value.l;
+                    while((unsigned short)value_cpy.l > 0)
                     {
-                        value_cpy = (unsigned short)value_cpy / 8;
+                        value_cpy.l = (unsigned short)value_cpy.l / 8;
                         places++;
                     }
 
@@ -430,7 +431,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                         {
                             divisor = 1;
                             for(i = 1; i < places; i++) divisor *= 8;
-                            p = ((unsigned short)value / divisor) % 8;
+                            p = ((unsigned short)value.l / divisor) % 8;
                         
                             PrintCharacter(p + 48, foregroundColor, backgroundColor);
                             places--;
@@ -439,13 +440,13 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                     break;
                 case 's':
                 case 'u':
-                    value = (unsigned short)va_arg(valist, unsigned int);
+                    value.l = (unsigned short)va_arg(valist, unsigned int);
 
                     places = 0;
-                    value_cpy = value;
-                    while((unsigned short)value_cpy > 0)
+                    value_cpy.l = value.l;
+                    while((unsigned short)value_cpy.l > 0)
                     {
-                        value_cpy = (unsigned short)value_cpy / 10;
+                        value_cpy.l = (unsigned short)value_cpy.l / 10;
                         places++;
                     }
 
@@ -457,7 +458,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                         {
                             divisor = 1;
                             for(i = 1; i < places; i++) divisor *= 10;
-                            p = ((unsigned short)value / divisor) % 10;
+                            p = ((unsigned short)value.l / divisor) % 10;
                         
                             PrintCharacter(p + 48, foregroundColor, backgroundColor);
                             places--;
@@ -465,13 +466,13 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                     }
                     break;
                 case 'x':
-                    value = (unsigned short)va_arg(valist, int);
+                    value.l = (unsigned short)va_arg(valist, int);
 
                     places = 0;
-                    value_cpy = value;
-                    while((unsigned short)value_cpy > 0)
+                    value_cpy.l = value.l;
+                    while((unsigned short)value_cpy.l > 0)
                     {
-                        value_cpy = (unsigned short)value_cpy / 16;
+                        value_cpy.l = (unsigned short)value_cpy.l / 16;
                         places++;
                     }
 
@@ -483,7 +484,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                         {
                             divisor = 1;
                             for(i = 1; i < places; i++) divisor *= 16;
-                            p = ((unsigned short)value / divisor) % 16;
+                            p = ((unsigned short)value.l / divisor) % 16;
 
                             if(p > 9)
                                 PrintCharacter(p + 87, foregroundColor, backgroundColor);
@@ -494,13 +495,13 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                     }
                     break;
                 case 'X':
-                    value = (unsigned short)va_arg(valist, unsigned int);
+                    value.l = (unsigned short)va_arg(valist, unsigned int);
 
                     places = 0;
-                    value_cpy = value;
-                    while((unsigned short)value_cpy > 0)
+                    value_cpy.l = value.l;
+                    while((unsigned short)value_cpy.l > 0)
                     {
-                        value_cpy = (unsigned short)value_cpy / 16;
+                        value_cpy.l = (unsigned short)value_cpy.l / 16;
                         places++;
                     }
 
@@ -512,10 +513,10 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                         {
                             divisor = 1;
                             for(i = 1; i < places; i++) divisor *= 16;
-                            p = ((unsigned short)value / divisor) % 16;
+                            p = ((unsigned short)value.l / divisor) % 16;
 
                             if(p > 9)
-                                PrintCharacter(p + 66, foregroundColor, backgroundColor);
+                                PrintCharacter(p + 55, foregroundColor, backgroundColor);
                             else
                                 PrintCharacter(p + 48, foregroundColor, backgroundColor);
                             places--;
@@ -532,25 +533,25 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                 break;
             case 'd':
             case 'i':
-                value = (signed int)va_arg(valist, int);
+                value.l = (signed int)va_arg(valist, int);
 
-                if((signed int)value < 0)
+                if((signed int)value.l < 0)
                 {
                     PrintCharacter('-', foregroundColor, backgroundColor);
-                    value = (unsigned long)((signed int)value * -1);
-                    //value ^= (1UL << 31); //Flip sign bit
+                    value.l = (unsigned long)((signed int)value.l * -1);
+                    //value.l ^= (1UL << 31); //Flip sign bit
 
-                    if((signed int)value == 0) //Check for max unsigned value, since the following arithmatic won't work on it after flipping the sign bit
+                    if((signed int)value.l == 0) //Check for max unsigned value, since the following arithmatic won't work on it after flipping the sign bit
                     {
                         PrintString("2147483648", foregroundColor, backgroundColor);
                         break;
                     }
                 }
                 places = 0;
-                value_cpy = value;
-                while((signed int)value_cpy > 0)
+                value_cpy.l = value.l;
+                while((signed int)value_cpy.l > 0)
                 {
-                    value_cpy = (signed int)value_cpy / 10;
+                    value_cpy.l = (signed int)value_cpy.l / 10;
                     places++;
                 }
 
@@ -562,7 +563,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                     {
                         divisor = 1;
                         for(i = 1; i < places; i++) divisor *= 10;
-                        p = ((signed int)value / divisor) % 10;
+                        p = ((signed int)value.l / divisor) % 10;
                         
                         PrintCharacter(p + 48, foregroundColor, backgroundColor);
                         places--;
@@ -571,17 +572,116 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                 break;
             case 'e':
             case 'E':
+            case 'f':
+                value.d = va_arg(valist, double);
+                places = 0;
+                
+                if(((float)value.d) < 0.0f)
+                {
+                    PrintCharacter('-', foregroundColor, backgroundColor);
+                    value.d *= -1;
+                }
+
+                value_cpy.d = value.d;
+
+                while((float)value_cpy.d >= 1.0f)
+                {
+                    value_cpy.d = (float)value_cpy.d / 10;
+                    places++;
+                }
+
+                if(places == 0)
+                {
+                    PrintCharacter('0', foregroundColor, backgroundColor);
+                }
+                else
+                {
+                    while(places > 0)
+                    {
+                        divisor = 1;
+                        for(i = 1; i < places; i++) divisor *= 10;
+                        p = (unsigned long)((float)value.d / divisor) % 10;
+
+                        PrintCharacter(p + 48, foregroundColor, backgroundColor);
+                        places--;
+                    }
+                }
+
+
+                PrintCharacter('.', foregroundColor, backgroundColor);
+                places = 0;
+                while(places < 4)
+                {
+                    divisor = 10;
+                    for(i = 0; i < places; i++) divisor *= 10;
+                    p = (unsigned long)((float)value.d * divisor) % 10;
+
+                    PrintCharacter(p + 48, foregroundColor, backgroundColor);
+                    places++;
+                }
+
+
+                break;
             case 'g':
+                value.d = va_arg(valist, double);
+                places = 0;
+                
+                if(value.d < 0.0)
+                {
+                    PrintCharacter('-', foregroundColor, backgroundColor);
+                    value.d *= -1;
+                }
+
+                value_cpy.d = value.d;
+
+                while(value_cpy.d >= 1.0)
+                {
+                    value_cpy.d = value_cpy.d / 10;
+                    places++;
+                }
+
+                if(places == 0)
+                {
+                    PrintCharacter('0', foregroundColor, backgroundColor);
+                }
+                else
+                {
+                    while(places > 0)
+                    {
+                        divisor = 1;
+                        for(i = 1; i < places; i++) divisor *= 10;
+                        p = (unsigned long)(value.d / divisor) % 10;
+
+                        PrintCharacter(p + 48, foregroundColor, backgroundColor);
+                        places--;
+                    }
+                }
+
+
+                PrintCharacter('.', foregroundColor, backgroundColor);
+                places = 0;
+                while(places < 4)
+                {
+                    divisor = 10;
+                    for(i = 0; i < places; i++) divisor *= 10;
+                    p = (unsigned long)(value.d * divisor) % 10;
+
+                    PrintCharacter(p + 48, foregroundColor, backgroundColor);
+                    places++;
+                }
+
+
+                break;
             case 'G':
                 break;
             case 'o':
-                value = (unsigned int)va_arg(valist, unsigned int);
+                value.l = (unsigned int)va_arg(valist, unsigned int);
 
                 places = 0;
-                value_cpy = value;
-                while((unsigned int)value_cpy > 0)
+                value_cpy.l = value.l;
+                while((unsigned int)value_cpy.l > 0)
                 {
-                    value_cpy = (unsigned int)value_cpy / 8;
+                    value_cpy.l = (unsigned int)value_cpy.l / 8;
                     places++;
                 }
 
@@ -593,7 +693,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                     {
                         divisor = 1;
                         for(i = 1; i < places; i++) divisor *= 8;
-                        p = ((signed int)value / divisor) % 8;
+                        p = ((signed int)value.l / divisor) % 8;
                         
                         PrintCharacter(p + 48, foregroundColor, backgroundColor);
                         places--;
@@ -601,13 +701,13 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                 }
                 break;
             case 'u':
-                value = (unsigned int)va_arg(valist, unsigned int);
+                value.l = (unsigned int)va_arg(valist, unsigned int);
 
                 places = 0;
-                value_cpy = value;
-                while((unsigned int)value_cpy > 0)
+                value_cpy.l = value.l;
+                while((unsigned int)value_cpy.l > 0)
                 {
-                    value_cpy = (unsigned int)value_cpy / 10;
+                    value_cpy.l = (unsigned int)value_cpy.l / 10;
                     places++;
                 }
 
@@ -619,7 +719,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                     {
                         divisor = 1;
                         for(i = 1; i < places; i++) divisor *= 10;
-                        p = ((unsigned int)value / divisor) % 10;
+                        p = ((unsigned int)value.l / divisor) % 10;
                         
                         PrintCharacter(p + 48, foregroundColor, backgroundColor);
                         places--;
@@ -627,13 +727,13 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                 }
                 break;
             case 'x':
-                value = (unsigned int)va_arg(valist, unsigned int);
+                value.l = (unsigned int)va_arg(valist, unsigned int);
 
                 places = 0;
-                value_cpy = value;
-                while((unsigned int)value_cpy > 0)
+                value_cpy.l = value.l;
+                while((unsigned int)value_cpy.l > 0)
                 {
-                    value_cpy = (unsigned int)value_cpy / 16;
+                    value_cpy.l = (unsigned int)value_cpy.l / 16;
                     places++;
                 }
 
@@ -645,7 +745,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                     {
                         divisor = 1;
                         for(i = 1; i < places; i++) divisor *= 16;
-                        p = ((unsigned int)value / divisor) % 16;
+                        p = ((unsigned int)value.l / divisor) % 16;
                         
                         if(p > 9)
                             PrintCharacter(p + 87, foregroundColor, backgroundColor);
@@ -656,13 +756,13 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                 }
                 break;
             case 'X':
-                value = va_arg(valist, unsigned int);
+                value.l = va_arg(valist, unsigned int);
 
                 places = 0;
-                value_cpy = value;
-                while((unsigned int)value_cpy > 0)
+                value_cpy.l = value.l;
+                while((unsigned int)value_cpy.l > 0)
                 {
-                    value_cpy = (unsigned int)value_cpy / 16;
+                    value_cpy.l = (unsigned int)value_cpy.l / 16;
                     places++;
                 }
 
@@ -674,7 +774,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
                     {
                         divisor = 1;
                         for(i = 1; i < places; i++) divisor *= 16;
-                        p = (value / divisor) % 16;
+                        p = (value.l / divisor) % 16;
                         
                         if(p > 9)
                             PrintCharacter(p + 55, foregroundColor, backgroundColor);

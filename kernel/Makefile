@@ -14,11 +14,11 @@ INCLUDEDIR?=$(PREFIX)/include
 
 CFLAGS:=-fno-stack-protector -fpic \
 		-fshort-wchar -O3 -ffreestanding -nostdlib $(DEBUG_FLAGS) -I$(SHAREDDIR)/include \
-		-I/usr/include/efi -I/usr/include/efi/$(DEFAULT_ARCH) -I/usr/include/efi/protocol
-CPPFLAGS:=$(CPPFLAGS) -Iinclude -D$(DEFAULT_ARCH) $(DEBUG_FLAGS) -I$(SHAREDDIR)/indlude
+		-I../gnu-efi/inc -I../gnu-efi/inc/$(DEFAULT_ARCH) -I../gnu-efi/inc/protocol
+CPPFLAGS:=$(CPPFLAGS) -Iinclude -D$(DEFAULT_ARCH) $(DEBUG_FLAGS) -I$(SHAREDDIR)/include
 LDFLAGS:=$(LDFLAGS) -nostdlib -znocombreloc -shared --warn-common --no-undefined -znocombreloc \
-		-Bsymbolic -L /usr/lib -Iinclude -I$(SHAREDDIR)/include
-LIBS:=$(LIBS) -nostdlib -lefi -lgnuefi
+		-Bsymbolic -Iinclude -I$(SHAREDDIR)/include
+LIBS:=$(LIBS) -nostdlib -L ../gnu-efi/$(DEFAULT_ARCH)/gnuefi -L ../gnu-efi/$(DEFAULT_ARCH)/lib -lefi -lgnuefi
 
 
 ARCHDIR=arch/$(DEFAULT_ARCH)

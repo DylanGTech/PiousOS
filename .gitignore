@@ -1,4 +1,5 @@
 sysroot
+gnu-efi
 Compiler-*
 *.img
 

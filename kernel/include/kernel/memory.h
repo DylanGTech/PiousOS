@@ -3,6 +3,9 @@
 
 #include "kernel/kernel.h"
 
+#define GUID EFI_GUID
+#include "kernel/smbios.h"
+
 
 typedef struct MemorySettings {
     UINTN                   MemMapSize;              // Size of the memory map (LP->Memory_Map_Size)
@@ -13,9 +16,11 @@ typedef struct MemorySettings {
 } MemorySettings;
 
 extern MemorySettings mainMemorySettings;
-
+static const EFI_GUID smbios3TableGuid = SMBIOS3_TABLE_GUID;
+static const EFI_GUID smbiosTableGuid = SMBIOS_TABLE_GUID;
 
 void Initialize_Memory(UINTN MapSize, UINTN DescriptorSize, EFI_MEMORY_DESCRIPTOR *Map, UINT32 DescriptorVersion);
 uint64_t GetMaxMappedPhysicalAddress(void);
-
+uint64_t GetVisibleSystemRam(void);
+uint64_t GetInstalledSystemRam(EFI_CONFIGURATION_TABLE * ConfigurationTables, UINTN NumConfigTables);
 #endif

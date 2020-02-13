@@ -42,8 +42,12 @@ void kernel_main(LOADER_PARAMS * LP) // Loader Parameters
 
     Initialize_System(LP);
 
+    uint64_t ram = GetInstalledSystemRam(LP->ConfigTables, LP->Number_of_ConfigTables);
+    PrintString("Total RAM: %lu bytes (about %u MiB)\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor, ram, ram / 1024 / 1024);
+
     PrintString("Hello!\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor);
 
+    
     while(1)
     {
 
