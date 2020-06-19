@@ -41,12 +41,12 @@ __attribute__((aligned(64))) uint64_t MinimalGDT[5] = {0, 0x00af9a000000ffff, 0x
 __attribute__((aligned(4096))) static uint64_t outermost_table[512] = {0};
 
 
-void Initialize_System(LOADER_PARAMS* Parameters)
+void InitializeSystem(LOADER_PARAMS * Parameters)
 {
-    Initialize_Memory(Parameters->Memory_Map_Size, Parameters->Memory_Map_Size, Parameters->Memory_Map, Parameters->Memory_Map_Descriptor_Version);
-    Initialize_Display(Parameters->GPU_Configs->GPUArray[0]);
+    InitializeMemory(Parameters->Memory_Map_Size, Parameters->Memory_Map_Size, Parameters->Memory_Map, Parameters->Memory_Map_Descriptor_Version);
+    InitializeDisplay(Parameters->GPU_Configs->GPUArray[0]);
 
-    Initialize_ISR();
+    InitializeISR();
 
     uint64_t reg;
     uint64_t reg2;

@@ -112,36 +112,38 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
     }
 
     CHAR16 * KernelPath = L"\\Pious\\Kernel.exe";
-    //UINT64 KernelPathLen = 17;
+    //UINT64 KernelPathLen = 17;x
     UINT64 KernelPathSize = (17 + 1) << 1;
 
 
     EFI_FILE *KernelFile;
 
     // Open the kernel file from current drive root and point to it with KernelFile
-	BootStatus = uefi_call_wrapper(CurrentDriveRoot->Open, 5, CurrentDriveRoot, &KernelFile, KernelPath, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY);
-	if (EFI_ERROR(BootStatus))
+	  BootStatus = uefi_call_wrapper(CurrentDriveRoot->Open, 5, CurrentDriveRoot, &KernelFile, KernelPath, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY);
+	  if (EFI_ERROR(BootStatus))
     {
-		Print(L"%s file is missing\r\n", KernelPath);
-		return BootStatus;
-	}
+		    Print(L"%s file is missing\r\n", KernelPath);
+		    return BootStatus;
+	  }
+
 
     // Default ImageBase for 64-bit PE DLLs
-    EFI_PHYSICAL_ADDRESS Header_memory = 0x400000;
+    EFI_PHYSICAL_ADDRESS Header_memory = 0x40000000;
 
-    UINTN FileInfoSize;
+    UINTN FileInfoSize = 0;
+    EFI_FILE_INFO *FileInfo;
 
-    BootStatus = uefi_call_wrapper(KernelFile->GetInfo, 4, KernelFile, &gEfiFileInfoGuid, &FileInfoSize, NULL);
+    BootStatus = uefi_call_wrapper(KernelFile->GetInfo, 4, KernelFile, &gEfiFileInfoGuid, &FileInfoSize, FileInfo);
     // GetInfo will intentionally error out and provide the correct fileinfosize value
 
-    EFI_FILE_INFO *FileInfo;
+
     BootStatus = uefi_call_wrapper(ST->BootServices->AllocatePool, 3, EfiLoaderData, FileInfoSize, (void**)&FileInfo); // Reserve memory for file info/attributes and such, to prevent it from getting run over
     if(EFI_ERROR(BootStatus))
     {
         Print(L"FileInfo AllocatePool error. 0x%llx\r\n", BootStatus);
         return BootStatus;
     }
-
+    
     // Actually get the metadata
     BootStatus = uefi_call_wrapper(KernelFile->GetInfo, 4, KernelFile, &gEfiFileInfoGuid, &FileInfoSize, FileInfo);
     if(EFI_ERROR(BootStatus))
@@ -149,7 +151,7 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
         Print(L"GetInfo error. 0x%llx\r\n", BootStatus);
         return BootStatus;
     }
-    
+
     // Read file header
     UINTN size = sizeof(IMAGE_DOS_HEADER);
     IMAGE_DOS_HEADER DOSheader;
@@ -166,7 +168,6 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
     // For the entry point jump, we need to know if the file uses ms_abi (is a PE image) or sysv_abi (*NIX image) calling convention
     UINT8 KernelisPE = 0;
 #endif
-
 
     //----------------------------------------------------------------------------------------------------------------------------------
     //  64-Bit ELF Loader
@@ -196,8 +197,13 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
 
 
       // Check if 64-bit
+#ifdef x86_64
       if(ELF64header.e_ident[EI_CLASS] == ELFCLASS64 && ELF64header.e_machine == EM_X86_64)
+#elif aarch64
+      if(ELF64header.e_ident[EI_CLASS] == ELFCLASS64 && ELF64header.e_machine == EM_AARCH64)
+#endif
       {
+        /*
         if (ELF64header.e_type != ET_DYN)
         {
           BootStatus = EFI_INVALID_PARAMETER;
@@ -205,6 +211,7 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
           Print(L"e_type: 0x%hx\r\n", ELF64header.e_type); // If it's 3, we're good and won't see this. Hopefully the image was compiled with -fpie and linked with -static-pie
           return BootStatus;
         }
+        */
 
         UINT64 i; // Iterator
         UINT64 virt_size = 0; // Virtual address max
@@ -251,18 +258,20 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
         KernelPages = pages;
 
 
-        EFI_PHYSICAL_ADDRESS AllocatedMemory = 0x400000; // Default for ELF
+        //EFI_PHYSICAL_ADDRESS AllocatedMemory = 0x400000; // Default for ELF
+        EFI_PHYSICAL_ADDRESS AllocatedMemory = 0x40000000; // 256 MiB (Temporary)
 
-        BootStatus = uefi_call_wrapper(BS->AllocatePages, 4, AllocateAnyPages, EfiLoaderData, pages, &AllocatedMemory);
+
+        BootStatus = uefi_call_wrapper(BS->AllocatePages, 4, AllocateAddress, EfiLoaderData, pages, &AllocatedMemory);
         if(EFI_ERROR(BootStatus))
         {
           Print(L"Could not allocate pages for ELF program segments. Error code: 0x%llx\r\n", BootStatus);
           return BootStatus;
         }
 
-
         // Zero the allocated pages
         ZeroMem((VOID*)AllocatedMemory, (pages << EFI_PAGE_SHIFT));
+
         // If that memory isn't actually free due to weird firmware behavior...
         // Iterate through the entirety of what was just allocated and check to make sure it's all zeros
         // Start buggy firmware workaround
@@ -504,7 +513,7 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
         {
           Elf64_Phdr *specific_program_header = &program_headers_table[i];
           UINTN RawDataSize = specific_program_header->p_filesz; // 64-bit ELFs can have 64-bit file sizes!
-          EFI_PHYSICAL_ADDRESS SectionAddress = AllocatedMemory + specific_program_header->p_vaddr; // 64-bit ELFs use 64-bit addressing!
+          EFI_PHYSICAL_ADDRESS SectionAddress = specific_program_header->p_vaddr; // 64-bit ELFs use 64-bit addressing!
 
           if(specific_program_header->p_type == PT_LOAD)
           {
@@ -545,7 +554,7 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
 
         // e_entry should be a 64-bit relative memory address, and gives the kernel's entry point
         KernelBaseAddress = AllocatedMemory;
-        Header_memory = AllocatedMemory + ELF64header.e_entry;
+        Header_memory = ELF64header.e_entry; //AllocatedMemory + ELF64header.e_entry;
 
         // Loaded! On to memorymap and exitbootservices...
         // NOTE: Executable entry point is now defined in Header_memory's contained address, which is AllocatedMemory + ELF64header.e_entry
@@ -554,7 +563,11 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
       else
       {
         BootStatus = EFI_INVALID_PARAMETER;
+#ifdef x86_64
         Print(L"Hey! 64-bit (x86_64) ELFs only.\r\n");
+#elif aarch64
+        Print(L"Hey! 64-bit (aarch64) ELFs only.\r\n");
+#endif
         return BootStatus;
       }
   }
@@ -592,7 +605,6 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
 */
 
 // Below is a better, but more complex version. EFI Spec recommends this method; apparently some systems need a second call to ExitBootServices.
-
   // Get memory map and exit boot services
   BootStatus = uefi_call_wrapper(BS->GetMemoryMap, 5, &MemMapSize, MemMap, &MemMapKey, &MemMapDescriptorSize, &MemMapDescriptorVersion);
   if(BootStatus == EFI_BUFFER_TOO_SMALL)
@@ -605,7 +617,7 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
     }
     BootStatus = uefi_call_wrapper(BS->GetMemoryMap, 5, &MemMapSize, MemMap, &MemMapKey, &MemMapDescriptorSize, &MemMapDescriptorVersion);
   }
-
+  
 
   BootStatus = uefi_call_wrapper(BS->ExitBootServices, 2, ImageHandle, MemMapKey);
 
@@ -626,11 +638,12 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
       }
       BootStatus = uefi_call_wrapper(BS->GetMemoryMap, 5, &MemMapSize, MemMap, &MemMapKey, &MemMapDescriptorSize, &MemMapDescriptorVersion);
     }
-
+  
+    
     BootStatus = uefi_call_wrapper(BS->ExitBootServices, 2, ImageHandle, MemMapKey);
 
   }
-
+  
   // This applies to both the simple and larger versions of the above.
   if(EFI_ERROR(BootStatus))
   {
@@ -694,7 +707,7 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
   Loader_block->Number_of_ConfigTables = NumSysCfgTables;
 
 
-  #ifdef x86_64
+#ifdef x86_64
   // Jump to entry point, and WE ARE LIVE!!
   if(KernelisPE)
   {
@@ -709,8 +722,12 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
     EntryPointPlaceholder(Loader_block);
   }
 #elif aarch64
+
+
+  
   typedef void (*EntryPointFunction)(LOADER_PARAMS * LP); // Placeholder names for jump
   EntryPointFunction EntryPointPlaceholder = (EntryPointFunction)(Header_memory);
+  
   EntryPointPlaceholder(Loader_block);
 #endif
 
@@ -1613,6 +1630,7 @@ EFI_STATUS InitUEFI_GOP(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics)
       // Can blanketly override Info struct, though (no pointers in it, just raw data)
       *(Graphics->GPUArray[DevNum].Info) = *(GOPTable->Mode->Info);
 
+      Print(L"0x%llx and 0x%llx\r\n", GOPTable->Mode->FrameBufferBase, GOPTable->Mode->FrameBufferSize);
     } // End for each individual DevNum
   }
   else if((NumHandlesInHandleBuffer > 1) && (DevNum == 1))

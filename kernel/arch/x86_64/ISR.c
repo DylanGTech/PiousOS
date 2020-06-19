@@ -6,11 +6,11 @@
 //#include "kernel/EfiErr.h"
 
 
-static void setInterruptEntry(uint64_t isrNum, uint64_t isrAddr);
-static void setNMIInterruptEntry(uint64_t isrNum, uint64_t isrAddr);
-static void setBPInterruptEntry(uint64_t isrNum, uint64_t isrAddr);
-static void setMCInterruptEntry(uint64_t isrNum, uint64_t isrAddr);
-static void setTrapEntry(uint64_t isrNum, uint64_t isrAddr);
+static void SetInterruptEntry(uint64_t isrNum, uint64_t isrAddr);
+static void SetNMIInterruptEntry(uint64_t isrNum, uint64_t isrAddr);
+static void SetBPInterruptEntry(uint64_t isrNum, uint64_t isrAddr);
+static void SetMCInterruptEntry(uint64_t isrNum, uint64_t isrAddr);
+static void SetTrapEntry(uint64_t isrNum, uint64_t isrAddr);
 
 __attribute__((aligned(64))) TSS64_STRUCT tss64 = {0};
 
@@ -26,7 +26,7 @@ __attribute__((aligned(64))) static volatile unsigned char cpu_xsave_space[XSAVE
 __attribute__((aligned(64))) static volatile unsigned char user_xsave_space[XSAVE_SIZE] = {0}; // For vectors 32-255, which can't preempt each other due to interrupt gating (IF in RFLAGS is cleared during ISR execution)
 
 
-void Initialize_ISR()
+void InitializeISR()
 {
     uint64_t reg;
 
@@ -88,7 +88,7 @@ void Initialize_ISR()
                "mov %ax, %gs \n\t"
                "mov %ax, %ss \n\t"
                "movq $8, %rdx \n\t" // 64-bit code segment index
-               // Store RIP offset, pointing to right after 'lretq'
+               // Store RIP offSet, pointing to right after 'lretq'
                "leaq 4(%rip), %rax \n\t" // This is hardcoded to the size of the rest of this little ASM block. %rip points to the next instruction, +4 bytes puts it right after 'lretq'
                "pushq %rdx \n\t"
                "pushq %rax \n\t"
@@ -111,286 +111,286 @@ void Initialize_ISR()
     // Predefined System Interrupts and Exceptions
     //
 
-    setInterruptEntry(0, (uint64_t)DE_ISR_pusher0); // Fault #DE: Divide Error (divide by 0 or not enough bits in destination)
-    setInterruptEntry(1, (uint64_t)DB_ISR_pusher1); // Fault/Trap #DB: Debug Exception
-    setNMIInterruptEntry(2, (uint64_t)NMI_ISR_pusher2); // NMI (Nonmaskable External Interrupt)
+    SetInterruptEntry(0, (uint64_t)DE_ISR_pusher0); // Fault #DE: Divide Error (divide by 0 or not enough bits in destination)
+    SetInterruptEntry(1, (uint64_t)DB_ISR_pusher1); // Fault/Trap #DB: Debug Exception
+    SetNMIInterruptEntry(2, (uint64_t)NMI_ISR_pusher2); // NMI (Nonmaskable External Interrupt)
     // Fun fact: Hyper-V will send a watchdog timeout via an NMI if the system is halted for a while. Looks like it's supposed to crash the VM via
-    // triple fault if there's no handler set up. Hpyer-V-Worker logs that the VM "has encountered a watchdog timeout and was reset" in the Windows
+    // triple fault if there's no handler Set up. Hpyer-V-Worker logs that the VM "has encountered a watchdog timeout and was reSet" in the Windows
     // event viewer when the VM receives the NMI. Neat.
-    setBPInterruptEntry(3, (uint64_t)BP_ISR_pusher3); // Trap #BP: Breakpoint (INT3 instruction)
-    setInterruptEntry(4, (uint64_t)OF_ISR_pusher4); // Trap #OF: Overflow (INTO instruction)
-    setInterruptEntry(5, (uint64_t)BR_ISR_pusher5); // Fault #BR: BOUND Range Exceeded (BOUND instruction)
-    setInterruptEntry(6, (uint64_t)UD_ISR_pusher6); // Fault #UD: Invalid or Undefined Opcode
-    setInterruptEntry(7, (uint64_t)NM_ISR_pusher7); // Fault #NM: Device Not Available Exception
+    SetBPInterruptEntry(3, (uint64_t)BP_ISR_pusher3); // Trap #BP: Breakpoint (INT3 instruction)
+    SetInterruptEntry(4, (uint64_t)OF_ISR_pusher4); // Trap #OF: Overflow (INTO instruction)
+    SetInterruptEntry(5, (uint64_t)BR_ISR_pusher5); // Fault #BR: BOUND Range Exceeded (BOUND instruction)
+    SetInterruptEntry(6, (uint64_t)UD_ISR_pusher6); // Fault #UD: Invalid or Undefined Opcode
+    SetInterruptEntry(7, (uint64_t)NM_ISR_pusher7); // Fault #NM: Device Not Available Exception
 
-    setMCInterruptEntry(8, (uint64_t)DF_EXC_pusher8); // Abort #DF: Double Fault (error code is always 0)
+    SetMCInterruptEntry(8, (uint64_t)DF_EXC_pusher8); // Abort #DF: Double Fault (error code is always 0)
 
-    setInterruptEntry(9, (uint64_t)CSO_ISR_pusher9); // Fault (i386): Coprocessor Segment Overrun (long since obsolete, included for completeness)
+    SetInterruptEntry(9, (uint64_t)CSO_ISR_pusher9); // Fault (i386): Coprocessor Segment Overrun (long since obsolete, included for completeness)
 
-    setInterruptEntry(10, (uint64_t)TS_EXC_pusher10); // Fault #TS: Invalid TSS
-    setInterruptEntry(11, (uint64_t)NP_EXC_pusher11); // Fault #NP: Segment Not Present
-    setInterruptEntry(12, (uint64_t)SS_EXC_pusher12); // Fault #SS: Stack Segment Fault
-    setInterruptEntry(13, (uint64_t)GP_EXC_pusher13); // Fault #GP: General Protection
-    setInterruptEntry(14, (uint64_t)PF_EXC_pusher14); // Fault #PF: Page Fault
+    SetInterruptEntry(10, (uint64_t)TS_EXC_pusher10); // Fault #TS: Invalid TSS
+    SetInterruptEntry(11, (uint64_t)NP_EXC_pusher11); // Fault #NP: Segment Not Present
+    SetInterruptEntry(12, (uint64_t)SS_EXC_pusher12); // Fault #SS: Stack Segment Fault
+    SetInterruptEntry(13, (uint64_t)GP_EXC_pusher13); // Fault #GP: General Protection
+    SetInterruptEntry(14, (uint64_t)PF_EXC_pusher14); // Fault #PF: Page Fault
 
-    setInterruptEntry(16, (uint64_t)MF_ISR_pusher16); // Fault #MF: Math Error (x87 FPU Floating-Point Math Error)
+    SetInterruptEntry(16, (uint64_t)MF_ISR_pusher16); // Fault #MF: Math Error (x87 FPU Floating-Point Math Error)
 
-    setInterruptEntry(17, (uint64_t)AC_EXC_pusher17); // Fault #AC: Alignment Check (error code is always 0)
+    SetInterruptEntry(17, (uint64_t)AC_EXC_pusher17); // Fault #AC: Alignment Check (error code is always 0)
 
-    setMCInterruptEntry(18, (uint64_t)MC_ISR_pusher18); // Abort #MC: Machine Check
-    setInterruptEntry(19, (uint64_t)XM_ISR_pusher19); // Fault #XM: SIMD Floating-Point Exception (SSE instructions)
-    setInterruptEntry(20, (uint64_t)VE_ISR_pusher20); // Fault #VE: Virtualization Exception
+    SetMCInterruptEntry(18, (uint64_t)MC_ISR_pusher18); // Abort #MC: Machine Check
+    SetInterruptEntry(19, (uint64_t)XM_ISR_pusher19); // Fault #XM: SIMD Floating-Point Exception (SSE instructions)
+    SetInterruptEntry(20, (uint64_t)VE_ISR_pusher20); // Fault #VE: Virtualization Exception
 
-    setInterruptEntry(30, (uint64_t)SX_EXC_pusher30); // Fault #SX: Security Exception
+    SetInterruptEntry(30, (uint64_t)SX_EXC_pusher30); // Fault #SX: Security Exception
 
     //
     // These are system reserved, if they trigger they will go to unhandled interrupt error
     //
 
-    setInterruptEntry(15, (uint64_t)CPU_ISR_pusher15);
+    SetInterruptEntry(15, (uint64_t)CPU_ISR_pusher15);
 
-    setInterruptEntry(21, (uint64_t)CPU_ISR_pusher21);
-    setInterruptEntry(22, (uint64_t)CPU_ISR_pusher22);
-    setInterruptEntry(23, (uint64_t)CPU_ISR_pusher23);
-    setInterruptEntry(24, (uint64_t)CPU_ISR_pusher24);
-    setInterruptEntry(25, (uint64_t)CPU_ISR_pusher25);
-    setInterruptEntry(26, (uint64_t)CPU_ISR_pusher26);
-    setInterruptEntry(27, (uint64_t)CPU_ISR_pusher27);
-    setInterruptEntry(28, (uint64_t)CPU_ISR_pusher28);
-    setInterruptEntry(29, (uint64_t)CPU_ISR_pusher29);
+    SetInterruptEntry(21, (uint64_t)CPU_ISR_pusher21);
+    SetInterruptEntry(22, (uint64_t)CPU_ISR_pusher22);
+    SetInterruptEntry(23, (uint64_t)CPU_ISR_pusher23);
+    SetInterruptEntry(24, (uint64_t)CPU_ISR_pusher24);
+    SetInterruptEntry(25, (uint64_t)CPU_ISR_pusher25);
+    SetInterruptEntry(26, (uint64_t)CPU_ISR_pusher26);
+    SetInterruptEntry(27, (uint64_t)CPU_ISR_pusher27);
+    SetInterruptEntry(28, (uint64_t)CPU_ISR_pusher28);
+    SetInterruptEntry(29, (uint64_t)CPU_ISR_pusher29);
 
-    setInterruptEntry(31, (uint64_t)CPU_ISR_pusher31);
+    SetInterruptEntry(31, (uint64_t)CPU_ISR_pusher31);
 
     //
     // User-Defined Interrupts
     //
 
-    // By default everything is set to USER_ISR_MACRO.
+    // By default everything is Set to USER_ISR_MACRO.
 
-    setInterruptEntry(32, (uint64_t)User_ISR_pusher32);
-    setInterruptEntry(33, (uint64_t)User_ISR_pusher33);
-    setInterruptEntry(34, (uint64_t)User_ISR_pusher34);
-    setInterruptEntry(35, (uint64_t)User_ISR_pusher35);
-    setInterruptEntry(36, (uint64_t)User_ISR_pusher36);
-    setInterruptEntry(37, (uint64_t)User_ISR_pusher37);
-    setInterruptEntry(38, (uint64_t)User_ISR_pusher38);
-    setInterruptEntry(39, (uint64_t)User_ISR_pusher39);
-    setInterruptEntry(40, (uint64_t)User_ISR_pusher40);
-    setInterruptEntry(41, (uint64_t)User_ISR_pusher41);
-    setInterruptEntry(42, (uint64_t)User_ISR_pusher42);
-    setInterruptEntry(43, (uint64_t)User_ISR_pusher43);
-    setInterruptEntry(44, (uint64_t)User_ISR_pusher44);
-    setInterruptEntry(45, (uint64_t)User_ISR_pusher45);
-    setInterruptEntry(46, (uint64_t)User_ISR_pusher46);
-    setInterruptEntry(47, (uint64_t)User_ISR_pusher47);
-    setInterruptEntry(48, (uint64_t)User_ISR_pusher48);
-    setInterruptEntry(49, (uint64_t)User_ISR_pusher49);
-    setInterruptEntry(50, (uint64_t)User_ISR_pusher50);
-    setInterruptEntry(51, (uint64_t)User_ISR_pusher51);
-    setInterruptEntry(52, (uint64_t)User_ISR_pusher52);
-    setInterruptEntry(53, (uint64_t)User_ISR_pusher53);
-    setInterruptEntry(54, (uint64_t)User_ISR_pusher54);
-    setInterruptEntry(55, (uint64_t)User_ISR_pusher55);
-    setInterruptEntry(56, (uint64_t)User_ISR_pusher56);
-    setInterruptEntry(57, (uint64_t)User_ISR_pusher57);
-    setInterruptEntry(58, (uint64_t)User_ISR_pusher58);
-    setInterruptEntry(59, (uint64_t)User_ISR_pusher59);
-    setInterruptEntry(60, (uint64_t)User_ISR_pusher60);
-    setInterruptEntry(61, (uint64_t)User_ISR_pusher61);
-    setInterruptEntry(62, (uint64_t)User_ISR_pusher62);
-    setInterruptEntry(63, (uint64_t)User_ISR_pusher63);
-    setInterruptEntry(64, (uint64_t)User_ISR_pusher64);
-    setInterruptEntry(65, (uint64_t)User_ISR_pusher65);
-    setInterruptEntry(66, (uint64_t)User_ISR_pusher66);
-    setInterruptEntry(67, (uint64_t)User_ISR_pusher67);
-    setInterruptEntry(68, (uint64_t)User_ISR_pusher68);
-    setInterruptEntry(69, (uint64_t)User_ISR_pusher69);
-    setInterruptEntry(70, (uint64_t)User_ISR_pusher70);
-    setInterruptEntry(71, (uint64_t)User_ISR_pusher71);
-    setInterruptEntry(72, (uint64_t)User_ISR_pusher72);
-    setInterruptEntry(73, (uint64_t)User_ISR_pusher73);
-    setInterruptEntry(74, (uint64_t)User_ISR_pusher74);
-    setInterruptEntry(75, (uint64_t)User_ISR_pusher75);
-    setInterruptEntry(76, (uint64_t)User_ISR_pusher76);
-    setInterruptEntry(77, (uint64_t)User_ISR_pusher77);
-    setInterruptEntry(78, (uint64_t)User_ISR_pusher78);
-    setInterruptEntry(79, (uint64_t)User_ISR_pusher79);
-    setInterruptEntry(80, (uint64_t)User_ISR_pusher80);
-    setInterruptEntry(81, (uint64_t)User_ISR_pusher81);
-    setInterruptEntry(82, (uint64_t)User_ISR_pusher82);
-    setInterruptEntry(83, (uint64_t)User_ISR_pusher83);
-    setInterruptEntry(84, (uint64_t)User_ISR_pusher84);
-    setInterruptEntry(85, (uint64_t)User_ISR_pusher85);
-    setInterruptEntry(86, (uint64_t)User_ISR_pusher86);
-    setInterruptEntry(87, (uint64_t)User_ISR_pusher87);
-    setInterruptEntry(88, (uint64_t)User_ISR_pusher88);
-    setInterruptEntry(89, (uint64_t)User_ISR_pusher89);
-    setInterruptEntry(90, (uint64_t)User_ISR_pusher90);
-    setInterruptEntry(91, (uint64_t)User_ISR_pusher91);
-    setInterruptEntry(92, (uint64_t)User_ISR_pusher92);
-    setInterruptEntry(93, (uint64_t)User_ISR_pusher93);
-    setInterruptEntry(94, (uint64_t)User_ISR_pusher94);
-    setInterruptEntry(95, (uint64_t)User_ISR_pusher95);
-    setInterruptEntry(96, (uint64_t)User_ISR_pusher96);
-    setInterruptEntry(97, (uint64_t)User_ISR_pusher97);
-    setInterruptEntry(98, (uint64_t)User_ISR_pusher98);
-    setInterruptEntry(99, (uint64_t)User_ISR_pusher99);
-    setInterruptEntry(100, (uint64_t)User_ISR_pusher100);
-    setInterruptEntry(101, (uint64_t)User_ISR_pusher101);
-    setInterruptEntry(102, (uint64_t)User_ISR_pusher102);
-    setInterruptEntry(103, (uint64_t)User_ISR_pusher103);
-    setInterruptEntry(104, (uint64_t)User_ISR_pusher104);
-    setInterruptEntry(105, (uint64_t)User_ISR_pusher105);
-    setInterruptEntry(106, (uint64_t)User_ISR_pusher106);
-    setInterruptEntry(107, (uint64_t)User_ISR_pusher107);
-    setInterruptEntry(108, (uint64_t)User_ISR_pusher108);
-    setInterruptEntry(109, (uint64_t)User_ISR_pusher109);
-    setInterruptEntry(110, (uint64_t)User_ISR_pusher110);
-    setInterruptEntry(111, (uint64_t)User_ISR_pusher111);
-    setInterruptEntry(112, (uint64_t)User_ISR_pusher112);
-    setInterruptEntry(113, (uint64_t)User_ISR_pusher113);
-    setInterruptEntry(114, (uint64_t)User_ISR_pusher114);
-    setInterruptEntry(115, (uint64_t)User_ISR_pusher115);
-    setInterruptEntry(116, (uint64_t)User_ISR_pusher116);
-    setInterruptEntry(117, (uint64_t)User_ISR_pusher117);
-    setInterruptEntry(118, (uint64_t)User_ISR_pusher118);
-    setInterruptEntry(119, (uint64_t)User_ISR_pusher119);
-    setInterruptEntry(120, (uint64_t)User_ISR_pusher120);
-    setInterruptEntry(121, (uint64_t)User_ISR_pusher121);
-    setInterruptEntry(122, (uint64_t)User_ISR_pusher122);
-    setInterruptEntry(123, (uint64_t)User_ISR_pusher123);
-    setInterruptEntry(124, (uint64_t)User_ISR_pusher124);
-    setInterruptEntry(125, (uint64_t)User_ISR_pusher125);
-    setInterruptEntry(126, (uint64_t)User_ISR_pusher126);
-    setInterruptEntry(127, (uint64_t)User_ISR_pusher127);
-    setInterruptEntry(128, (uint64_t)User_ISR_pusher128);
-    setInterruptEntry(129, (uint64_t)User_ISR_pusher129);
-    setInterruptEntry(130, (uint64_t)User_ISR_pusher130);
-    setInterruptEntry(131, (uint64_t)User_ISR_pusher131);
-    setInterruptEntry(132, (uint64_t)User_ISR_pusher132);
-    setInterruptEntry(133, (uint64_t)User_ISR_pusher133);
-    setInterruptEntry(134, (uint64_t)User_ISR_pusher134);
-    setInterruptEntry(135, (uint64_t)User_ISR_pusher135);
-    setInterruptEntry(136, (uint64_t)User_ISR_pusher136);
-    setInterruptEntry(137, (uint64_t)User_ISR_pusher137);
-    setInterruptEntry(138, (uint64_t)User_ISR_pusher138);
-    setInterruptEntry(139, (uint64_t)User_ISR_pusher139);
-    setInterruptEntry(140, (uint64_t)User_ISR_pusher140);
-    setInterruptEntry(141, (uint64_t)User_ISR_pusher141);
-    setInterruptEntry(142, (uint64_t)User_ISR_pusher142);
-    setInterruptEntry(143, (uint64_t)User_ISR_pusher143);
-    setInterruptEntry(144, (uint64_t)User_ISR_pusher144);
-    setInterruptEntry(145, (uint64_t)User_ISR_pusher145);
-    setInterruptEntry(146, (uint64_t)User_ISR_pusher146);
-    setInterruptEntry(147, (uint64_t)User_ISR_pusher147);
-    setInterruptEntry(148, (uint64_t)User_ISR_pusher148);
-    setInterruptEntry(149, (uint64_t)User_ISR_pusher149);
-    setInterruptEntry(150, (uint64_t)User_ISR_pusher150);
-    setInterruptEntry(151, (uint64_t)User_ISR_pusher151);
-    setInterruptEntry(152, (uint64_t)User_ISR_pusher152);
-    setInterruptEntry(153, (uint64_t)User_ISR_pusher153);
-    setInterruptEntry(154, (uint64_t)User_ISR_pusher154);
-    setInterruptEntry(155, (uint64_t)User_ISR_pusher155);
-    setInterruptEntry(156, (uint64_t)User_ISR_pusher156);
-    setInterruptEntry(157, (uint64_t)User_ISR_pusher157);
-    setInterruptEntry(158, (uint64_t)User_ISR_pusher158);
-    setInterruptEntry(159, (uint64_t)User_ISR_pusher159);
-    setInterruptEntry(160, (uint64_t)User_ISR_pusher160);
-    setInterruptEntry(161, (uint64_t)User_ISR_pusher161);
-    setInterruptEntry(162, (uint64_t)User_ISR_pusher162);
-    setInterruptEntry(163, (uint64_t)User_ISR_pusher163);
-    setInterruptEntry(164, (uint64_t)User_ISR_pusher164);
-    setInterruptEntry(165, (uint64_t)User_ISR_pusher165);
-    setInterruptEntry(166, (uint64_t)User_ISR_pusher166);
-    setInterruptEntry(167, (uint64_t)User_ISR_pusher167);
-    setInterruptEntry(168, (uint64_t)User_ISR_pusher168);
-    setInterruptEntry(169, (uint64_t)User_ISR_pusher169);
-    setInterruptEntry(170, (uint64_t)User_ISR_pusher170);
-    setInterruptEntry(171, (uint64_t)User_ISR_pusher171);
-    setInterruptEntry(172, (uint64_t)User_ISR_pusher172);
-    setInterruptEntry(173, (uint64_t)User_ISR_pusher173);
-    setInterruptEntry(174, (uint64_t)User_ISR_pusher174);
-    setInterruptEntry(175, (uint64_t)User_ISR_pusher175);
-    setInterruptEntry(176, (uint64_t)User_ISR_pusher176);
-    setInterruptEntry(177, (uint64_t)User_ISR_pusher177);
-    setInterruptEntry(178, (uint64_t)User_ISR_pusher178);
-    setInterruptEntry(179, (uint64_t)User_ISR_pusher179);
-    setInterruptEntry(180, (uint64_t)User_ISR_pusher180);
-    setInterruptEntry(181, (uint64_t)User_ISR_pusher181);
-    setInterruptEntry(182, (uint64_t)User_ISR_pusher182);
-    setInterruptEntry(183, (uint64_t)User_ISR_pusher183);
-    setInterruptEntry(184, (uint64_t)User_ISR_pusher184);
-    setInterruptEntry(185, (uint64_t)User_ISR_pusher185);
-    setInterruptEntry(186, (uint64_t)User_ISR_pusher186);
-    setInterruptEntry(187, (uint64_t)User_ISR_pusher187);
-    setInterruptEntry(188, (uint64_t)User_ISR_pusher188);
-    setInterruptEntry(189, (uint64_t)User_ISR_pusher189);
-    setInterruptEntry(190, (uint64_t)User_ISR_pusher190);
-    setInterruptEntry(191, (uint64_t)User_ISR_pusher191);
-    setInterruptEntry(192, (uint64_t)User_ISR_pusher192);
-    setInterruptEntry(193, (uint64_t)User_ISR_pusher193);
-    setInterruptEntry(194, (uint64_t)User_ISR_pusher194);
-    setInterruptEntry(195, (uint64_t)User_ISR_pusher195);
-    setInterruptEntry(196, (uint64_t)User_ISR_pusher196);
-    setInterruptEntry(197, (uint64_t)User_ISR_pusher197);
-    setInterruptEntry(198, (uint64_t)User_ISR_pusher198);
-    setInterruptEntry(199, (uint64_t)User_ISR_pusher199);
-    setInterruptEntry(200, (uint64_t)User_ISR_pusher200);
-    setInterruptEntry(201, (uint64_t)User_ISR_pusher201);
-    setInterruptEntry(202, (uint64_t)User_ISR_pusher202);
-    setInterruptEntry(203, (uint64_t)User_ISR_pusher203);
-    setInterruptEntry(204, (uint64_t)User_ISR_pusher204);
-    setInterruptEntry(205, (uint64_t)User_ISR_pusher205);
-    setInterruptEntry(206, (uint64_t)User_ISR_pusher206);
-    setInterruptEntry(207, (uint64_t)User_ISR_pusher207);
-    setInterruptEntry(208, (uint64_t)User_ISR_pusher208);
-    setInterruptEntry(209, (uint64_t)User_ISR_pusher209);
-    setInterruptEntry(210, (uint64_t)User_ISR_pusher210);
-    setInterruptEntry(211, (uint64_t)User_ISR_pusher211);
-    setInterruptEntry(212, (uint64_t)User_ISR_pusher212);
-    setInterruptEntry(213, (uint64_t)User_ISR_pusher213);
-    setInterruptEntry(214, (uint64_t)User_ISR_pusher214);
-    setInterruptEntry(215, (uint64_t)User_ISR_pusher215);
-    setInterruptEntry(216, (uint64_t)User_ISR_pusher216);
-    setInterruptEntry(217, (uint64_t)User_ISR_pusher217);
-    setInterruptEntry(218, (uint64_t)User_ISR_pusher218);
-    setInterruptEntry(219, (uint64_t)User_ISR_pusher219);
-    setInterruptEntry(220, (uint64_t)User_ISR_pusher220);
-    setInterruptEntry(221, (uint64_t)User_ISR_pusher221);
-    setInterruptEntry(222, (uint64_t)User_ISR_pusher222);
-    setInterruptEntry(223, (uint64_t)User_ISR_pusher223);
-    setInterruptEntry(224, (uint64_t)User_ISR_pusher224);
-    setInterruptEntry(225, (uint64_t)User_ISR_pusher225);
-    setInterruptEntry(226, (uint64_t)User_ISR_pusher226);
-    setInterruptEntry(227, (uint64_t)User_ISR_pusher227);
-    setInterruptEntry(228, (uint64_t)User_ISR_pusher228);
-    setInterruptEntry(229, (uint64_t)User_ISR_pusher229);
-    setInterruptEntry(230, (uint64_t)User_ISR_pusher230);
-    setInterruptEntry(231, (uint64_t)User_ISR_pusher231);
-    setInterruptEntry(232, (uint64_t)User_ISR_pusher232);
-    setInterruptEntry(233, (uint64_t)User_ISR_pusher233);
-    setInterruptEntry(234, (uint64_t)User_ISR_pusher234);
-    setInterruptEntry(235, (uint64_t)User_ISR_pusher235);
-    setInterruptEntry(236, (uint64_t)User_ISR_pusher236);
-    setInterruptEntry(237, (uint64_t)User_ISR_pusher237);
-    setInterruptEntry(238, (uint64_t)User_ISR_pusher238);
-    setInterruptEntry(239, (uint64_t)User_ISR_pusher239);
-    setInterruptEntry(240, (uint64_t)User_ISR_pusher240);
-    setInterruptEntry(241, (uint64_t)User_ISR_pusher241);
-    setInterruptEntry(242, (uint64_t)User_ISR_pusher242);
-    setInterruptEntry(243, (uint64_t)User_ISR_pusher243);
-    setInterruptEntry(244, (uint64_t)User_ISR_pusher244);
-    setInterruptEntry(245, (uint64_t)User_ISR_pusher245);
-    setInterruptEntry(246, (uint64_t)User_ISR_pusher246);
-    setInterruptEntry(247, (uint64_t)User_ISR_pusher247);
-    setInterruptEntry(248, (uint64_t)User_ISR_pusher248);
-    setInterruptEntry(249, (uint64_t)User_ISR_pusher249);
-    setInterruptEntry(250, (uint64_t)User_ISR_pusher250);
-    setInterruptEntry(251, (uint64_t)User_ISR_pusher251);
-    setInterruptEntry(252, (uint64_t)User_ISR_pusher252);
-    setInterruptEntry(253, (uint64_t)User_ISR_pusher253);
-    setInterruptEntry(254, (uint64_t)User_ISR_pusher254);
-    setInterruptEntry(255, (uint64_t)User_ISR_pusher255);
+    SetInterruptEntry(32, (uint64_t)User_ISR_pusher32);
+    SetInterruptEntry(33, (uint64_t)User_ISR_pusher33);
+    SetInterruptEntry(34, (uint64_t)User_ISR_pusher34);
+    SetInterruptEntry(35, (uint64_t)User_ISR_pusher35);
+    SetInterruptEntry(36, (uint64_t)User_ISR_pusher36);
+    SetInterruptEntry(37, (uint64_t)User_ISR_pusher37);
+    SetInterruptEntry(38, (uint64_t)User_ISR_pusher38);
+    SetInterruptEntry(39, (uint64_t)User_ISR_pusher39);
+    SetInterruptEntry(40, (uint64_t)User_ISR_pusher40);
+    SetInterruptEntry(41, (uint64_t)User_ISR_pusher41);
+    SetInterruptEntry(42, (uint64_t)User_ISR_pusher42);
+    SetInterruptEntry(43, (uint64_t)User_ISR_pusher43);
+    SetInterruptEntry(44, (uint64_t)User_ISR_pusher44);
+    SetInterruptEntry(45, (uint64_t)User_ISR_pusher45);
+    SetInterruptEntry(46, (uint64_t)User_ISR_pusher46);
+    SetInterruptEntry(47, (uint64_t)User_ISR_pusher47);
+    SetInterruptEntry(48, (uint64_t)User_ISR_pusher48);
+    SetInterruptEntry(49, (uint64_t)User_ISR_pusher49);
+    SetInterruptEntry(50, (uint64_t)User_ISR_pusher50);
+    SetInterruptEntry(51, (uint64_t)User_ISR_pusher51);
+    SetInterruptEntry(52, (uint64_t)User_ISR_pusher52);
+    SetInterruptEntry(53, (uint64_t)User_ISR_pusher53);
+    SetInterruptEntry(54, (uint64_t)User_ISR_pusher54);
+    SetInterruptEntry(55, (uint64_t)User_ISR_pusher55);
+    SetInterruptEntry(56, (uint64_t)User_ISR_pusher56);
+    SetInterruptEntry(57, (uint64_t)User_ISR_pusher57);
+    SetInterruptEntry(58, (uint64_t)User_ISR_pusher58);
+    SetInterruptEntry(59, (uint64_t)User_ISR_pusher59);
+    SetInterruptEntry(60, (uint64_t)User_ISR_pusher60);
+    SetInterruptEntry(61, (uint64_t)User_ISR_pusher61);
+    SetInterruptEntry(62, (uint64_t)User_ISR_pusher62);
+    SetInterruptEntry(63, (uint64_t)User_ISR_pusher63);
+    SetInterruptEntry(64, (uint64_t)User_ISR_pusher64);
+    SetInterruptEntry(65, (uint64_t)User_ISR_pusher65);
+    SetInterruptEntry(66, (uint64_t)User_ISR_pusher66);
+    SetInterruptEntry(67, (uint64_t)User_ISR_pusher67);
+    SetInterruptEntry(68, (uint64_t)User_ISR_pusher68);
+    SetInterruptEntry(69, (uint64_t)User_ISR_pusher69);
+    SetInterruptEntry(70, (uint64_t)User_ISR_pusher70);
+    SetInterruptEntry(71, (uint64_t)User_ISR_pusher71);
+    SetInterruptEntry(72, (uint64_t)User_ISR_pusher72);
+    SetInterruptEntry(73, (uint64_t)User_ISR_pusher73);
+    SetInterruptEntry(74, (uint64_t)User_ISR_pusher74);
+    SetInterruptEntry(75, (uint64_t)User_ISR_pusher75);
+    SetInterruptEntry(76, (uint64_t)User_ISR_pusher76);
+    SetInterruptEntry(77, (uint64_t)User_ISR_pusher77);
+    SetInterruptEntry(78, (uint64_t)User_ISR_pusher78);
+    SetInterruptEntry(79, (uint64_t)User_ISR_pusher79);
+    SetInterruptEntry(80, (uint64_t)User_ISR_pusher80);
+    SetInterruptEntry(81, (uint64_t)User_ISR_pusher81);
+    SetInterruptEntry(82, (uint64_t)User_ISR_pusher82);
+    SetInterruptEntry(83, (uint64_t)User_ISR_pusher83);
+    SetInterruptEntry(84, (uint64_t)User_ISR_pusher84);
+    SetInterruptEntry(85, (uint64_t)User_ISR_pusher85);
+    SetInterruptEntry(86, (uint64_t)User_ISR_pusher86);
+    SetInterruptEntry(87, (uint64_t)User_ISR_pusher87);
+    SetInterruptEntry(88, (uint64_t)User_ISR_pusher88);
+    SetInterruptEntry(89, (uint64_t)User_ISR_pusher89);
+    SetInterruptEntry(90, (uint64_t)User_ISR_pusher90);
+    SetInterruptEntry(91, (uint64_t)User_ISR_pusher91);
+    SetInterruptEntry(92, (uint64_t)User_ISR_pusher92);
+    SetInterruptEntry(93, (uint64_t)User_ISR_pusher93);
+    SetInterruptEntry(94, (uint64_t)User_ISR_pusher94);
+    SetInterruptEntry(95, (uint64_t)User_ISR_pusher95);
+    SetInterruptEntry(96, (uint64_t)User_ISR_pusher96);
+    SetInterruptEntry(97, (uint64_t)User_ISR_pusher97);
+    SetInterruptEntry(98, (uint64_t)User_ISR_pusher98);
+    SetInterruptEntry(99, (uint64_t)User_ISR_pusher99);
+    SetInterruptEntry(100, (uint64_t)User_ISR_pusher100);
+    SetInterruptEntry(101, (uint64_t)User_ISR_pusher101);
+    SetInterruptEntry(102, (uint64_t)User_ISR_pusher102);
+    SetInterruptEntry(103, (uint64_t)User_ISR_pusher103);
+    SetInterruptEntry(104, (uint64_t)User_ISR_pusher104);
+    SetInterruptEntry(105, (uint64_t)User_ISR_pusher105);
+    SetInterruptEntry(106, (uint64_t)User_ISR_pusher106);
+    SetInterruptEntry(107, (uint64_t)User_ISR_pusher107);
+    SetInterruptEntry(108, (uint64_t)User_ISR_pusher108);
+    SetInterruptEntry(109, (uint64_t)User_ISR_pusher109);
+    SetInterruptEntry(110, (uint64_t)User_ISR_pusher110);
+    SetInterruptEntry(111, (uint64_t)User_ISR_pusher111);
+    SetInterruptEntry(112, (uint64_t)User_ISR_pusher112);
+    SetInterruptEntry(113, (uint64_t)User_ISR_pusher113);
+    SetInterruptEntry(114, (uint64_t)User_ISR_pusher114);
+    SetInterruptEntry(115, (uint64_t)User_ISR_pusher115);
+    SetInterruptEntry(116, (uint64_t)User_ISR_pusher116);
+    SetInterruptEntry(117, (uint64_t)User_ISR_pusher117);
+    SetInterruptEntry(118, (uint64_t)User_ISR_pusher118);
+    SetInterruptEntry(119, (uint64_t)User_ISR_pusher119);
+    SetInterruptEntry(120, (uint64_t)User_ISR_pusher120);
+    SetInterruptEntry(121, (uint64_t)User_ISR_pusher121);
+    SetInterruptEntry(122, (uint64_t)User_ISR_pusher122);
+    SetInterruptEntry(123, (uint64_t)User_ISR_pusher123);
+    SetInterruptEntry(124, (uint64_t)User_ISR_pusher124);
+    SetInterruptEntry(125, (uint64_t)User_ISR_pusher125);
+    SetInterruptEntry(126, (uint64_t)User_ISR_pusher126);
+    SetInterruptEntry(127, (uint64_t)User_ISR_pusher127);
+    SetInterruptEntry(128, (uint64_t)User_ISR_pusher128);
+    SetInterruptEntry(129, (uint64_t)User_ISR_pusher129);
+    SetInterruptEntry(130, (uint64_t)User_ISR_pusher130);
+    SetInterruptEntry(131, (uint64_t)User_ISR_pusher131);
+    SetInterruptEntry(132, (uint64_t)User_ISR_pusher132);
+    SetInterruptEntry(133, (uint64_t)User_ISR_pusher133);
+    SetInterruptEntry(134, (uint64_t)User_ISR_pusher134);
+    SetInterruptEntry(135, (uint64_t)User_ISR_pusher135);
+    SetInterruptEntry(136, (uint64_t)User_ISR_pusher136);
+    SetInterruptEntry(137, (uint64_t)User_ISR_pusher137);
+    SetInterruptEntry(138, (uint64_t)User_ISR_pusher138);
+    SetInterruptEntry(139, (uint64_t)User_ISR_pusher139);
+    SetInterruptEntry(140, (uint64_t)User_ISR_pusher140);
+    SetInterruptEntry(141, (uint64_t)User_ISR_pusher141);
+    SetInterruptEntry(142, (uint64_t)User_ISR_pusher142);
+    SetInterruptEntry(143, (uint64_t)User_ISR_pusher143);
+    SetInterruptEntry(144, (uint64_t)User_ISR_pusher144);
+    SetInterruptEntry(145, (uint64_t)User_ISR_pusher145);
+    SetInterruptEntry(146, (uint64_t)User_ISR_pusher146);
+    SetInterruptEntry(147, (uint64_t)User_ISR_pusher147);
+    SetInterruptEntry(148, (uint64_t)User_ISR_pusher148);
+    SetInterruptEntry(149, (uint64_t)User_ISR_pusher149);
+    SetInterruptEntry(150, (uint64_t)User_ISR_pusher150);
+    SetInterruptEntry(151, (uint64_t)User_ISR_pusher151);
+    SetInterruptEntry(152, (uint64_t)User_ISR_pusher152);
+    SetInterruptEntry(153, (uint64_t)User_ISR_pusher153);
+    SetInterruptEntry(154, (uint64_t)User_ISR_pusher154);
+    SetInterruptEntry(155, (uint64_t)User_ISR_pusher155);
+    SetInterruptEntry(156, (uint64_t)User_ISR_pusher156);
+    SetInterruptEntry(157, (uint64_t)User_ISR_pusher157);
+    SetInterruptEntry(158, (uint64_t)User_ISR_pusher158);
+    SetInterruptEntry(159, (uint64_t)User_ISR_pusher159);
+    SetInterruptEntry(160, (uint64_t)User_ISR_pusher160);
+    SetInterruptEntry(161, (uint64_t)User_ISR_pusher161);
+    SetInterruptEntry(162, (uint64_t)User_ISR_pusher162);
+    SetInterruptEntry(163, (uint64_t)User_ISR_pusher163);
+    SetInterruptEntry(164, (uint64_t)User_ISR_pusher164);
+    SetInterruptEntry(165, (uint64_t)User_ISR_pusher165);
+    SetInterruptEntry(166, (uint64_t)User_ISR_pusher166);
+    SetInterruptEntry(167, (uint64_t)User_ISR_pusher167);
+    SetInterruptEntry(168, (uint64_t)User_ISR_pusher168);
+    SetInterruptEntry(169, (uint64_t)User_ISR_pusher169);
+    SetInterruptEntry(170, (uint64_t)User_ISR_pusher170);
+    SetInterruptEntry(171, (uint64_t)User_ISR_pusher171);
+    SetInterruptEntry(172, (uint64_t)User_ISR_pusher172);
+    SetInterruptEntry(173, (uint64_t)User_ISR_pusher173);
+    SetInterruptEntry(174, (uint64_t)User_ISR_pusher174);
+    SetInterruptEntry(175, (uint64_t)User_ISR_pusher175);
+    SetInterruptEntry(176, (uint64_t)User_ISR_pusher176);
+    SetInterruptEntry(177, (uint64_t)User_ISR_pusher177);
+    SetInterruptEntry(178, (uint64_t)User_ISR_pusher178);
+    SetInterruptEntry(179, (uint64_t)User_ISR_pusher179);
+    SetInterruptEntry(180, (uint64_t)User_ISR_pusher180);
+    SetInterruptEntry(181, (uint64_t)User_ISR_pusher181);
+    SetInterruptEntry(182, (uint64_t)User_ISR_pusher182);
+    SetInterruptEntry(183, (uint64_t)User_ISR_pusher183);
+    SetInterruptEntry(184, (uint64_t)User_ISR_pusher184);
+    SetInterruptEntry(185, (uint64_t)User_ISR_pusher185);
+    SetInterruptEntry(186, (uint64_t)User_ISR_pusher186);
+    SetInterruptEntry(187, (uint64_t)User_ISR_pusher187);
+    SetInterruptEntry(188, (uint64_t)User_ISR_pusher188);
+    SetInterruptEntry(189, (uint64_t)User_ISR_pusher189);
+    SetInterruptEntry(190, (uint64_t)User_ISR_pusher190);
+    SetInterruptEntry(191, (uint64_t)User_ISR_pusher191);
+    SetInterruptEntry(192, (uint64_t)User_ISR_pusher192);
+    SetInterruptEntry(193, (uint64_t)User_ISR_pusher193);
+    SetInterruptEntry(194, (uint64_t)User_ISR_pusher194);
+    SetInterruptEntry(195, (uint64_t)User_ISR_pusher195);
+    SetInterruptEntry(196, (uint64_t)User_ISR_pusher196);
+    SetInterruptEntry(197, (uint64_t)User_ISR_pusher197);
+    SetInterruptEntry(198, (uint64_t)User_ISR_pusher198);
+    SetInterruptEntry(199, (uint64_t)User_ISR_pusher199);
+    SetInterruptEntry(200, (uint64_t)User_ISR_pusher200);
+    SetInterruptEntry(201, (uint64_t)User_ISR_pusher201);
+    SetInterruptEntry(202, (uint64_t)User_ISR_pusher202);
+    SetInterruptEntry(203, (uint64_t)User_ISR_pusher203);
+    SetInterruptEntry(204, (uint64_t)User_ISR_pusher204);
+    SetInterruptEntry(205, (uint64_t)User_ISR_pusher205);
+    SetInterruptEntry(206, (uint64_t)User_ISR_pusher206);
+    SetInterruptEntry(207, (uint64_t)User_ISR_pusher207);
+    SetInterruptEntry(208, (uint64_t)User_ISR_pusher208);
+    SetInterruptEntry(209, (uint64_t)User_ISR_pusher209);
+    SetInterruptEntry(210, (uint64_t)User_ISR_pusher210);
+    SetInterruptEntry(211, (uint64_t)User_ISR_pusher211);
+    SetInterruptEntry(212, (uint64_t)User_ISR_pusher212);
+    SetInterruptEntry(213, (uint64_t)User_ISR_pusher213);
+    SetInterruptEntry(214, (uint64_t)User_ISR_pusher214);
+    SetInterruptEntry(215, (uint64_t)User_ISR_pusher215);
+    SetInterruptEntry(216, (uint64_t)User_ISR_pusher216);
+    SetInterruptEntry(217, (uint64_t)User_ISR_pusher217);
+    SetInterruptEntry(218, (uint64_t)User_ISR_pusher218);
+    SetInterruptEntry(219, (uint64_t)User_ISR_pusher219);
+    SetInterruptEntry(220, (uint64_t)User_ISR_pusher220);
+    SetInterruptEntry(221, (uint64_t)User_ISR_pusher221);
+    SetInterruptEntry(222, (uint64_t)User_ISR_pusher222);
+    SetInterruptEntry(223, (uint64_t)User_ISR_pusher223);
+    SetInterruptEntry(224, (uint64_t)User_ISR_pusher224);
+    SetInterruptEntry(225, (uint64_t)User_ISR_pusher225);
+    SetInterruptEntry(226, (uint64_t)User_ISR_pusher226);
+    SetInterruptEntry(227, (uint64_t)User_ISR_pusher227);
+    SetInterruptEntry(228, (uint64_t)User_ISR_pusher228);
+    SetInterruptEntry(229, (uint64_t)User_ISR_pusher229);
+    SetInterruptEntry(230, (uint64_t)User_ISR_pusher230);
+    SetInterruptEntry(231, (uint64_t)User_ISR_pusher231);
+    SetInterruptEntry(232, (uint64_t)User_ISR_pusher232);
+    SetInterruptEntry(233, (uint64_t)User_ISR_pusher233);
+    SetInterruptEntry(234, (uint64_t)User_ISR_pusher234);
+    SetInterruptEntry(235, (uint64_t)User_ISR_pusher235);
+    SetInterruptEntry(236, (uint64_t)User_ISR_pusher236);
+    SetInterruptEntry(237, (uint64_t)User_ISR_pusher237);
+    SetInterruptEntry(238, (uint64_t)User_ISR_pusher238);
+    SetInterruptEntry(239, (uint64_t)User_ISR_pusher239);
+    SetInterruptEntry(240, (uint64_t)User_ISR_pusher240);
+    SetInterruptEntry(241, (uint64_t)User_ISR_pusher241);
+    SetInterruptEntry(242, (uint64_t)User_ISR_pusher242);
+    SetInterruptEntry(243, (uint64_t)User_ISR_pusher243);
+    SetInterruptEntry(244, (uint64_t)User_ISR_pusher244);
+    SetInterruptEntry(245, (uint64_t)User_ISR_pusher245);
+    SetInterruptEntry(246, (uint64_t)User_ISR_pusher246);
+    SetInterruptEntry(247, (uint64_t)User_ISR_pusher247);
+    SetInterruptEntry(248, (uint64_t)User_ISR_pusher248);
+    SetInterruptEntry(249, (uint64_t)User_ISR_pusher249);
+    SetInterruptEntry(250, (uint64_t)User_ISR_pusher250);
+    SetInterruptEntry(251, (uint64_t)User_ISR_pusher251);
+    SetInterruptEntry(252, (uint64_t)User_ISR_pusher252);
+    SetInterruptEntry(253, (uint64_t)User_ISR_pusher253);
+    SetInterruptEntry(254, (uint64_t)User_ISR_pusher254);
+    SetInterruptEntry(255, (uint64_t)User_ISR_pusher255);
 
 
 
@@ -406,7 +406,7 @@ void Initialize_ISR()
 
 
 
-static void setInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
+static void SetInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
 {
     IDT_data[isrNum].Offset1 = (uint16_t)isrAddr;
     IDT_data[isrNum].SegmentSelector = 0x08;
@@ -417,7 +417,7 @@ static void setInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
     IDT_data[isrNum].Reserved = 0;
 }
 
-static void setTrapEntry(uint64_t isrNum, uint64_t isrAddr)
+static void SetTrapEntry(uint64_t isrNum, uint64_t isrAddr)
 {
     IDT_data[isrNum].Offset1 = (uint16_t)isrAddr;
     IDT_data[isrNum].SegmentSelector = 0x08;
@@ -428,7 +428,7 @@ static void setTrapEntry(uint64_t isrNum, uint64_t isrAddr)
     IDT_data[isrNum].Reserved = 0;
 }
 
-static void setUnusedEntry(uint64_t isrNum)
+static void SetUnusedEntry(uint64_t isrNum)
 {
     IDT_data[isrNum].Offset1 = 0;
     IDT_data[isrNum].SegmentSelector = 0x08;
@@ -438,7 +438,7 @@ static void setUnusedEntry(uint64_t isrNum)
     IDT_data[isrNum].Offset3 = 0;
     IDT_data[isrNum].Reserved = 0;
 }
-static void setNMIInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
+static void SetNMIInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
 {
 
   IDT_data[isrNum].Offset1 = (uint16_t)isrAddr;
@@ -451,7 +451,7 @@ static void setNMIInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
 }
 
 // Double fault
-static void setDFInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
+static void SetDFInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
 {
   IDT_data[isrNum].Offset1 = (uint16_t)isrAddr;
   IDT_data[isrNum].SegmentSelector = 0x08;
@@ -463,7 +463,7 @@ static void setDFInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
 }
 
 // Machine Check
-static void setMCInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
+static void SetMCInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
 {
     IDT_data[isrNum].Offset1 = (uint16_t)isrAddr;
     IDT_data[isrNum].SegmentSelector = 0x08;
@@ -475,7 +475,7 @@ static void setMCInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
 }
 
 // Debug (INT3)
-static void setBPInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
+static void SetBPInterruptEntry(uint64_t isrNum, uint64_t isrAddr)
 {
     IDT_data[isrNum].Offset1 = (uint16_t)isrAddr;
     IDT_data[isrNum].SegmentSelector = 0x08;

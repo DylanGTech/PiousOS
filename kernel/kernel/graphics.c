@@ -24,7 +24,7 @@
 
 TextDisplaySettings mainTextDisplaySettings;
 
-void Initialize_Display(EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE GPU)
+void InitializeDisplay(EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE GPU)
 {
     mainTextDisplaySettings.defaultGPU = GPU;
     mainTextDisplaySettings.fontColor = 0x00FFFFFF;
@@ -194,7 +194,7 @@ void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundC
     unsigned char i;
     unsigned char p;
 
-    va_start(valist, num_args);
+    va_start(valist, backgroundColor);
 
     while(*str != '\0')
     {
@@ -821,5 +821,6 @@ void ColorScreen(UINT32 color)
         {
             *(UINT32*)(mainTextDisplaySettings.defaultGPU.FrameBufferBase + 4 * (mainTextDisplaySettings.defaultGPU.Info->PixelsPerScanLine * row + col)) = color; // The thing at FrameBufferBase is an address pointing to UINT32s. FrameBufferBase itself is a 64-bit number.
         }
+        
     }
 }

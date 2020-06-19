@@ -14,7 +14,6 @@
    limitations under the License.
 */
 
-
 #include "bootloader/elf.h"
 
 #include "bootloader/bootloader.h"
@@ -24,11 +23,11 @@
 
 #define STACK_SIZE (1 << 20)
 
-__attribute__((aligned(64))) static volatile unsigned char kernel_stack[STACK_SIZE] = {0};
+
+__attribute__((aligned(64))) static volatile unsigned char kernel_stack[STACK_SIZE];
 
 void kernel_main(LOADER_PARAMS * LP) // Loader Parameters
 {
-
 #ifdef x86_64
     asm volatile ("leaq %[new_stack_base], %%rbp\n\t"
             "leaq %[new_stack_end], %%rsp \n\t"
@@ -37,16 +36,26 @@ void kernel_main(LOADER_PARAMS * LP) // Loader Parameters
             : // No clobbers
     );
 #elif aarch64
-    
+    /*
+    asm volatile (
+            "ldr x7, =new_stack_base\n\t"
+            "mov sp, x7\n\t"
+            : // No outputs
+            : [new_stack_base] "m" (kernel_stack[STACK_SIZE]) // Inputs;
+            : // No clobbers
+    );
+
+    while(1) ;
+    */
 #endif
 
-    Initialize_System(LP);
+    InitializeSystem(LP);
 
-    uint64_t ram = GetInstalledSystemRam(LP->ConfigTables, LP->Number_of_ConfigTables);
-    PrintString("Total RAM: %lu bytes (about %u MiB)\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor, ram, ram / 1024 / 1024);
+    //uint64_t ram = GetTotalSystemRam();
+    //PrintString("Total RAM: %lu bytes (about %u MiB)\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor, ram, ram / 1024 / 1024);
 
     PrintString("Hello!\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor);
-
+    //PrintString("MemMap Address: 0x%lX\nMemMap Size: %lu bytes\nDescriptor Size: %lu bytes\nDescriptor Version: %hu\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor, (unsigned long)mainMemorySettings.memMap, (unsigned long)mainMemorySettings.memMapSize, (unsigned long)mainMemorySettings.memMapDescriptorSize, (unsigned short)mainMemorySettings.memMapDescriptorVersion);
     
     while(1)
     {

@@ -47,11 +47,21 @@ $(LIBS) \
 all: 
 
 BOOTX64.EFI: $(OBJS)
-	$(DEFAULT_ARCH)-elf-ld -T ../gnu-efi/gnuefi/elf_$(DEFAULT_ARCH)_efi.lds -o boot.so $(CFLAGS) $(LINK_LIST) -L ../gnu-efi/$(DEFAULT_ARCH)/gnuefi -L ../gnu-efi/$(DEFAULT_ARCH)/lib -lefi -lgnuefi
+	$(DEFAULT_ARCH)-linux-gnu-ld -T ../gnu-efi/gnuefi/elf_$(DEFAULT_ARCH)_efi.lds -o boot.so $(LINK_LIST) -L ../gnu-efi/$(DEFAULT_ARCH)/gnuefi -L ../gnu-efi/$(DEFAULT_ARCH)/lib -lefi -lgnuefi
 
-	objcopy -j .text -j .sdata -j .data -j .dynamic \
+	$(DEFAULT_ARCH)-linux-gnu-objcopy -j .text -j .sdata -j .data -j .dynamic \
 	-j .dynsym  -j .rel -j .rela -j .reloc \
 	--target=efi-app-$(DEFAULT_ARCH) boot.so BOOTX64.EFI
+
+BOOTAA64.EFI: $(OBJS)
+	$(DEFAULT_ARCH)-linux-gnu-ld -T ../gnu-efi/gnuefi/elf_$(DEFAULT_ARCH)_efi.lds -o boot.so $(LINK_LIST) -L ../gnu-efi/$(DEFAULT_ARCH)/gnuefi -L ../gnu-efi/$(DEFAULT_ARCH)/lib -lefi -lgnuefi --defsym=EFI_SUBSYSTEM=10
+
+	$(DEFAULT_ARCH)-linux-gnu-objcopy -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel -j .rela -j .rel.* -j .rela.* -j .rel* -j .rela* -j .reloc -O binary boot.so BOOTAA64.EFI
+	#--target=efi-app-little$(DEFAULT_ARCH) boot.so BOOTX64.EFI
+
+	#x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o BOOTX64.EFI hello.o data.o -lgcc
+
+
 
 .c.o:
 	$(CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS) $(DEBUG_FLAGS) -T $(ARCHDIR)/linker.ld
@@ -61,14 +71,19 @@ BOOTX64.EFI: $(OBJS)
 
 clean:
 	rm -f BOOTX64.EFI
+	rm -f BOOTAA64.EFI
 	rm -f $(OBJS) *.o */*.o */*/*.o
 	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
 	rm -f boot.so
 
-install: install-bootloader
+install: install-bootloader-$(DEFAULT_ARCH)
 
-install-bootloader: BOOTX64.EFI
+install-bootloader-x86_64: BOOTX64.EFI
 	mkdir -p $(DESTDIR)$(BOOTDIR)
 	cp BOOTX64.EFI $(DESTDIR)$(BOOTDIR)
+
+install-bootloader-aarch64: BOOTAA64.EFI
+	mkdir -p $(DESTDIR)$(BOOTDIR)
+	cp BOOTAA64.EFI $(DESTDIR)$(BOOTDIR)
 
 -include $(OBJS:.o=.d)

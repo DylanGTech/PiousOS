@@ -23,7 +23,7 @@ typedef union
 } universal_long_t;
 
 
-void Initialize_System(LOADER_PARAMS* Parameters);
+void InitializeSystem(LOADER_PARAMS* Parameters);
 int16_t CompareMemory(const void * addr1, const void * addr2, uint64_t length);
 void Abort(uint64_t errorCode);
 

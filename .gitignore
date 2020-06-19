@@ -41,6 +41,8 @@ Compiler-*
 *.i*86
 *.x86_64
 *.hex
+*.EFI
+*.efi
 
 # Debug files
 *.dSYM/

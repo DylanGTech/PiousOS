@@ -12,11 +12,11 @@ EXEC_PREFIX?=$(PREFIX)
 KERNELDIR?=/Pious
 INCLUDEDIR?=$(PREFIX)/include
 
-CFLAGS:=-fno-stack-protector -fpic \
+CFLAGS:=-fno-stack-protector \
 		-fshort-wchar -O3 -ffreestanding -nostdlib $(DEBUG_FLAGS) -I$(SHAREDDIR)/include \
 		-I../gnu-efi/inc -I../gnu-efi/inc/$(DEFAULT_ARCH) -I../gnu-efi/inc/protocol
 CPPFLAGS:=$(CPPFLAGS) -Iinclude -D$(DEFAULT_ARCH) $(DEBUG_FLAGS) -I$(SHAREDDIR)/include
-LDFLAGS:=$(LDFLAGS) -nostdlib -znocombreloc -shared --warn-common --no-undefined -znocombreloc \
+LDFLAGS:=$(LDFLAGS) -nostdlib -znocombreloc --warn-common --no-undefined -znocombreloc \
 		-Bsymbolic -Iinclude -I$(SHAREDDIR)/include
 LIBS:=$(LIBS) -nostdlib -L ../gnu-efi/$(DEFAULT_ARCH)/gnuefi -L ../gnu-efi/$(DEFAULT_ARCH)/lib -lefi -lgnuefi
 
@@ -51,7 +51,7 @@ $(LIBS) \
 all: 
 
 Kernel.exe: $(OBJS)
-	$(DEFAULT_ARCH)-elf-gcc $(KERNEL_OBJS) -o $@ $(CFLAGS) -T $(ARCHDIR)/linker.ld -Bdynamic -pie
+	$(DEFAULT_ARCH)-elf-gcc $(KERNEL_OBJS) -o $@ $(CFLAGS) -T $(ARCHDIR)/linker.ld -Bdynamic
 .c.o:
 	$(CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS) -T $(ARCHDIR)/linker.ld
 

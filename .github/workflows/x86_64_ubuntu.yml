@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: setup
-      run: ./setup.sh x86_64 $COMPILER_PATH
+      run: ./setup.sh x86_64
       env:
         COMPILER_PATH: /home/runner/work/PiousOS/PiousOS/Compiler-x86_64
     - name: make

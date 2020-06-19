@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 # setup.sh (builds cross-compiler and references it in the PATH)
 sudo apt-get install make gcc bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo qemu-system
 
-mkdir $2
-cd $2
+mkdir Compiler-$1
+cd Compiler-$1
 mkdir src
 cd src
 
@@ -56,9 +56,20 @@ echo export PATH=\"$PREFIX/bin:\$PATH\" >> ~/.profile
 
 cd ../..
 wget -q http://downloads.sourceforge.net/project/gnu-efi/gnu-efi-3.0.11.tar.bz2
-tar -xjf gnu-efi-3.0.11.tar.bz2gnu-efi-3.0.11
+tar -xjf gnu-efi-3.0.11.tar.bz2
 mv gnu-efi-3.0.11 gnu-efi
 
 cd gnu-efi
 make
 sudo make install
+
+cd ..
+
+if [ $1 = "aarch64" ]
+    mkdir Compiler-$1-efi
+    cd Compiler-$1-efi
+    sudo apt-get install binutils-mingw-w64 gcc-mingw-w64
+    wget http://www.tysos.org/files/efi/mkgpt-latest.tar.bz2
+    tar -xjf mkgpt-latest.tar.bz2
+    cd mkgpt && ./configure && make && sudo make install && cd ..
+fi

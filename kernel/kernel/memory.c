@@ -16,7 +16,6 @@
 
 #include <efi.h>
 #include <efiprot.h>
-#include <pe.h>
 #include "bootloader/elf.h"
 
 #include "kernel/kernel.h"
@@ -25,12 +24,33 @@
 
 MemorySettings mainMemorySettings;
 
-void Initialize_Memory(UINTN MapSize, UINTN DescriptorSize, EFI_MEMORY_DESCRIPTOR *Map, UINT32 DescriptorVersion)
+void InitializeMemory(UINTN MapSize, UINTN DescriptorSize, EFI_MEMORY_DESCRIPTOR *Map, UINT32 DescriptorVersion)
 {
-    mainMemorySettings.MemMap = Map;
-    mainMemorySettings.MemMapDescriptorVersion = DescriptorVersion;
-    mainMemorySettings.MemMapDescriptorSize = DescriptorSize;
-    mainMemorySettings.MemMapSize = MapSize;
+    mainMemorySettings.memMap = Map;
+    mainMemorySettings.memMapDescriptorVersion = DescriptorVersion;
+    mainMemorySettings.memMapDescriptorSize = DescriptorSize;
+    mainMemorySettings.memMapSize = MapSize;
+}
+
+uint64_t AdjustMemMapSize(uint64_t NumberOfNewDescriptors)
+{
+    size_t numPages = EFI_SIZE_TO_PAGES(mainMemorySettings.memMapSize + (NumberOfNewDescriptors * mainMemorySettings.memMapDescriptorSize));
+    size_t originalNumPages = EFI_SIZE_TO_PAGES(mainMemorySettings.memMapSize);
+
+    if(numPages > originalNumPages)
+    {
+        EFI_MEMORY_DESCRIPTOR * Piece;
+        for(Piece = mainMemorySettings.memMap;
+            (uint8_t *)Piece < ((uint8_t *)mainMemorySettings.memMap + mainMemorySettings.memMapSize);
+            Piece = (EFI_MEMORY_DESCRIPTOR*)((uint8_t *)Piece + mainMemorySettings.memMapDescriptorSize))
+            {
+                break;
+            }
+            if((uint8_t *)Piece == ((uint8_t *)mainMemorySettings.memMap + mainMemorySettings.memMapSize))
+        {
+            Abort(0xFFFFFFFFFFFFFFFF);
+        }
+    }
 }
 
 uint64_t GetMaxMappedPhysicalAddress(void)
@@ -38,9 +58,9 @@ uint64_t GetMaxMappedPhysicalAddress(void)
     EFI_MEMORY_DESCRIPTOR * Piece;
     uint64_t currentAddress = 0, maxAddress = 0;
 
-    for(Piece = mainMemorySettings.MemMap; Piece < (EFI_MEMORY_DESCRIPTOR*)((uint8_t*)mainMemorySettings.MemMap + mainMemorySettings.MemMapSize); Piece = (EFI_MEMORY_DESCRIPTOR*)((uint8_t*)Piece + mainMemorySettings.MemMapDescriptorSize))
+    for(Piece = mainMemorySettings.memMap; Piece < (EFI_MEMORY_DESCRIPTOR *)((uint8_t *)mainMemorySettings.memMap + mainMemorySettings.memMapSize); Piece = (EFI_MEMORY_DESCRIPTOR *)((uint8_t *)Piece + mainMemorySettings.memMapDescriptorSize))
     {
-        currentAddress = Piece->PhysicalStart + Piece->NumberOfPages << 12;
+        currentAddress = Piece->PhysicalStart + Piece->NumberOfPages << EFI_PAGE_SHIFT;
         if(currentAddress > maxAddress)
         {
             maxAddress = currentAddress;
@@ -49,124 +69,38 @@ uint64_t GetMaxMappedPhysicalAddress(void)
     return maxAddress;
 }
 
-uint64_t GetInstalledSystemRam(EFI_CONFIGURATION_TABLE * ConfigurationTables, UINTN NumConfigTables)
+
+uint64_t GetUsableSystemRam(void)
 {
-    uint64_t systemram = 0;
-    uint64_t i;
-    for(i = 0; i < NumConfigTables; i++)
+    EFI_MEMORY_DESCRIPTOR * Piece;
+    uint64_t total = 0;
+
+    for(Piece = mainMemorySettings.memMap; Piece < (EFI_MEMORY_DESCRIPTOR *)((uint8_t *)mainMemorySettings.memMap + mainMemorySettings.memMapSize); Piece = (EFI_MEMORY_DESCRIPTOR *)((uint8_t *)Piece + mainMemorySettings.memMapDescriptorSize))
     {
-        if(!(CompareMemory(&ConfigurationTables[i].VendorGuid, &smbios3TableGuid, 16)))
+        if(
+            (Piece->Type != EfiMemoryMappedIO) &&
+            (Piece->Type != EfiMemoryMappedIOPortSpace) &&
+            (Piece->Type != EfiPalCode) &&
+            (Piece->Type != EfiMaxMemoryType)
+        )
         {
-#ifdef DEBUG_PIOUS
-            PrintDebugMessage("SMBIOS 3.x table found!\n");
-#endif
-            SMBIOS_TABLE_3_0_ENTRY_POINT * smb3_entry = (SMBIOS_TABLE_3_0_ENTRY_POINT *)ConfigurationTables[i].VendorTable;
-            SMBIOS_STRUCTURE * smb_header = (SMBIOS_STRUCTURE*)smb3_entry->TableAddress;
-            uint8_t * smb3_end = (uint8_t *)(smb3_entry->TableAddress + (uint64_t)smb3_entry->TableMaximumSize);
-
-            while((uint8_t*)smb_header < smb3_end)
-            {
-                if(smb_header->Type == 17) // Memory socket/device
-                {
-                    uint16_t smb_socket_size = ((SMBIOS_TABLE_TYPE17 *)smb_header)->Size;
-                    if(smb_socket_size == 0x7FFF) // Need extended size, which is always given in MB units
-                    {
-                        uint32_t smb_extended_socket_size = ((SMBIOS_TABLE_TYPE17 *)smb_header)->ExtendedSize;
-                        systemram += (uint64_t)smb_extended_socket_size << 20;
-                    }
-                    else if(smb_socket_size != 0xFFFF)
-                    {
-                        if(smb_socket_size & 0x8000) // KB units
-                        {
-                            systemram += (uint64_t)smb_socket_size << 10;
-                        }
-                        else // MB units
-                        {
-                            systemram += (uint64_t)smb_socket_size << 20;
-                        }
-                    }
-                    // Otherwise size is unknown (0xFFFF), don't add it.
-                }
-            }
-            break;
-        }
-        
-    }
-
-    if(systemram == 0)
-    {
-        for(i = 0; i < NumConfigTables; i++)
-        {
-            if(!CompareMemory(&ConfigurationTables[i].VendorGuid, &smbiosTableGuid, 16))
-            {
-#ifdef DEBUG_PIOUS
-                PrintDebugMessage("SMBIOS table found!\n");
-#endif
-
-                SMBIOS_TABLE_ENTRY_POINT * smb_entry = (SMBIOS_TABLE_ENTRY_POINT*)ConfigurationTables[i].VendorTable;
-                SMBIOS_STRUCTURE * smb_header = (SMBIOS_STRUCTURE*)((uint64_t)smb_entry->TableAddress);
-                uint8_t* smb_end = (uint8_t *)((uint64_t)smb_entry->TableAddress + (uint64_t)smb_entry->TableLength);
-
-                while((uint8_t*)smb_header < smb_end)
-                {
-                    if(smb_header->Type == 17) // Memory socket/device
-                    {
-                        uint16_t smb_socket_size = ((SMBIOS_TABLE_TYPE17 *)smb_header)->Size;
-                        if(smb_socket_size == 0x7FFF) // Need extended size, which is always given in MB units
-                        {
-                            uint32_t smb_extended_socket_size = ((SMBIOS_TABLE_TYPE17 *)smb_header)->ExtendedSize;
-                            systemram += (uint64_t)smb_extended_socket_size << 20;
-                        }
-                        else if(smb_socket_size != 0xFFFF)
-                        {
-                            if(smb_socket_size & 0x8000) // KB units
-                            {
-                                systemram += (uint64_t)smb_socket_size << 10;
-                            }
-                            else // MB units
-                            {
-                                systemram += (uint64_t)smb_socket_size << 20;
-                            }
-                        }
-                        // Otherwise size is unknown (0xFFFF), don't add it.
-                    }
-
-                    smb_header = (SMBIOS_STRUCTURE*)((uint64_t)smb_header + smb_header->Length);
-                    while(*(uint16_t*)smb_header != 0x0000) // Check for double null, meaning end of string set
-                    {
-                        smb_header = (SMBIOS_STRUCTURE*)((uint64_t)smb_header + 1);
-                    }
-                    smb_header = (SMBIOS_STRUCTURE*)((uint64_t)smb_header + 2); // Found end of current structure, move to start of next one
-                }
-
-                break;
-            }
+            PrintString("Pages found: %d\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor, Piece->NumberOfPages);
+            total += Piece->NumberOfPages << EFI_PAGE_SHIFT;
         }
     }
-    if(systemram == 0)
-        Abort(0xFFFFFFFFFFFFFFFF);
-
-    return systemram;
+    return total;
 }
 
-
-uint64_t GetVisibleSystemRam(void)
+uint64_t GetTotalSystemRam(void)
 {
-  EFI_MEMORY_DESCRIPTOR * Piece;
-  uint64_t total = 0;
+    EFI_MEMORY_DESCRIPTOR * Piece;
+    uint64_t total = 0;
 
-  for(Piece = mainMemorySettings.MemMap; Piece < (EFI_MEMORY_DESCRIPTOR*)((uint8_t*)mainMemorySettings.MemMap + mainMemorySettings.MemMapSize); Piece = (EFI_MEMORY_DESCRIPTOR*)((uint8_t*)Piece + mainMemorySettings.MemMapDescriptorSize))
-  {
-    if(
-        (Piece->Type != EfiMemoryMappedIO) &&
-        (Piece->Type != EfiMemoryMappedIOPortSpace) &&
-        (Piece->Type != EfiPalCode) &&
-        (Piece->Type != EfiMaxMemoryType)
-      )
+    for(Piece = mainMemorySettings.memMap; Piece < (EFI_MEMORY_DESCRIPTOR *)((uint8_t *)mainMemorySettings.memMap + mainMemorySettings.memMapSize); Piece = (EFI_MEMORY_DESCRIPTOR *)((uint8_t *)Piece + mainMemorySettings.memMapDescriptorSize))
     {
-      total += ((Piece->NumberOfPages) >> EFI_PAGE_SHIFT) + (((Piece->NumberOfPages) & EFI_PAGE_MASK) ? 1 : 0);
+        PrintString("Pages found: %d\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor, Piece->NumberOfPages);
+        total += Piece->NumberOfPages << EFI_PAGE_SHIFT;
     }
-  }
-
-  return total;
+    
+    return total;
 }
