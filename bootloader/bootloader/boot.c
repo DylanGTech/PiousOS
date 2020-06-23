@@ -1539,14 +1539,6 @@ EFI_STATUS InitUEFI_GOP(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics)
 
       EFI_GRAPHICS_OUTPUT_PROTOCOL *GOPTable;
 
-/*
-      // These are all the same
-      Print(L"sizeof(struct _EFI_GRAPHICS_OUTPUT_PROTOCOL): %llu\r\n", sizeof(struct _EFI_GRAPHICS_OUTPUT_PROTOCOL));
-      Print(L"sizeof(EFI_GRAPHICS_OUTPUT_PROTOCOL): %llu\r\n", sizeof(EFI_GRAPHICS_OUTPUT_PROTOCOL));
-      Print(L"sizeof(*GOPTable): %llu\r\n", sizeof(*GOPTable));
-      Print(L"sizeof(GOPTable[0]): %llu\r\n", sizeof(GOPTable[0]));
-*/
-
       // Mode->Info gets reserved once SizeOfInfo is determined (via QueryMode()).
 
       GOPStatus = uefi_call_wrapper(BS->OpenProtocol, 6, GraphicsHandles[DevNum], &GraphicsOutputProtocol, (void**)&GOPTable, ImageHandle, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);

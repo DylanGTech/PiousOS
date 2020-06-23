@@ -36,23 +36,17 @@ void kernel_main(LOADER_PARAMS * LP) // Loader Parameters
             : // No clobbers
     );
 #elif aarch64
-    /*
+    
     asm volatile (
-            "ldr x7, =new_stack_base\n\t"
-            "mov sp, x7\n\t"
+            "mov sp, %[new_stack_base]\n\t"
             : // No outputs
-            : [new_stack_base] "m" (kernel_stack[STACK_SIZE]) // Inputs;
-            : // No clobbers
+            : [new_stack_base] "r" (kernel_stack + STACK_SIZE) // Inputs;
+            : // Clobbers
     );
-
-    while(1) ;
-    */
+    
 #endif
 
     InitializeSystem(LP);
-
-    //uint64_t ram = GetTotalSystemRam();
-    //PrintString("Total RAM: %lu bytes (about %u MiB)\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor, ram, ram / 1024 / 1024);
 
     PrintString("Hello!\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor);
     //PrintString("MemMap Address: 0x%lX\nMemMap Size: %lu bytes\nDescriptor Size: %lu bytes\nDescriptor Version: %hu\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor, (unsigned long)mainMemorySettings.memMap, (unsigned long)mainMemorySettings.memMapSize, (unsigned long)mainMemorySettings.memMapDescriptorSize, (unsigned short)mainMemorySettings.memMapDescriptorVersion);

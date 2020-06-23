@@ -71,5 +71,5 @@ ifeq ($(DEFAULT_ARCH), aarch64)
 	#-drive if=none,format=raw,file=Pious.img,id=hd0 \
 	#-pflash flash0.img -pflash flash1.img
 
-	qemu-system-$(DEFAULT_ARCH) -m 2G -cpu cortex-a72 -M virt -drive format=raw,file=flash0.img,if=pflash -drive format=raw,file=flash1.img,if=pflash -drive if=none,file=Pious.img,id=hd0,format=raw -device virtio-blk-device,drive=hd0 -d guest_errors -device virtio-gpu-pci -device qemu-xhci -device usb-mouse -device usb-kbd -serial stdio -net none > debug.txt
+	qemu-system-$(DEFAULT_ARCH) -m 2G -cpu cortex-a72 -M virt -drive format=raw,file=flash0.img,if=pflash -drive format=raw,file=flash1.img,if=pflash -drive if=none,file=Pious.img,id=hd0,format=raw -device virtio-blk-device,drive=hd0 -d guest_errors -device virtio-gpu-pci -device qemu-xhci -device usb-mouse -device usb-kbd -serial stdio -net none -S -s
 endif
