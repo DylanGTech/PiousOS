@@ -1622,7 +1622,6 @@ EFI_STATUS InitUEFI_GOP(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics)
       // Can blanketly override Info struct, though (no pointers in it, just raw data)
       *(Graphics->GPUArray[DevNum].Info) = *(GOPTable->Mode->Info);
 
-      Print(L"0x%llx and 0x%llx\r\n", GOPTable->Mode->FrameBufferBase, GOPTable->Mode->FrameBufferSize);
     } // End for each individual DevNum
   }
   else if((NumHandlesInHandleBuffer > 1) && (DevNum == 1))
@@ -1802,6 +1801,7 @@ EFI_STATUS InitUEFI_GOP(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics)
       Graphics->GPUArray[DevNum].FrameBufferSize = GOPTable->Mode->FrameBufferSize;
       // Can blanketly override Info struct, though (no pointers in it, just raw data)
       *(Graphics->GPUArray[DevNum].Info) = *(GOPTable->Mode->Info);
+
 
     } // End for each individual DevNum
 

@@ -1,12 +1,15 @@
 #include "system.h"
 #include "kernel/graphics.h"
 #include "kernel/memory.h"
+#include "ISR.h"
 
 
 void InitializeSystem(LOADER_PARAMS * Parameters)
 {
     InitializeMemory(Parameters->Memory_Map_Size, Parameters->Memory_Map_Size, Parameters->Memory_Map, Parameters->Memory_Map_Descriptor_Version);
     InitializeDisplay(Parameters->GPU_Configs->GPUArray[0]);
+
+    InitializeISR();
 
 #ifdef DEBUG_PIOUS
     PrintDebugMessage("System Initialized\n");
