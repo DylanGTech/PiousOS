@@ -14,7 +14,7 @@ COMMON_CFLAGS=-O3 -g
 COMMON_CPPFLAGS=
 
 
-KERNEL_CFLAGS:=$(COMMON_CFLAGS) -fno-stack-protector \
+KERNEL_CFLAGS:=$(COMMON_CFLAGS) -fno-stack-protector  -mcmodel=kernel \
 		-fshort-wchar -O3 -ffreestanding -nostdlib $(DEBUG_FLAGS) -Iinc \
 		-Ignu-efi/inc -Ignu-efi/inc/$(DEFAULT_ARCH) -Ignu-efi/inc/protocol
 KERNEL_CPPFLAGS:=$(COMMON_CPPFLAGS) -D$(DEFAULT_ARCH) $(DEBUG_FLAGS) $(COMMON_DEBUG_FLAGS)
@@ -121,7 +121,7 @@ image: build
 
 qemu: image
 ifeq ($(DEFAULT_ARCH), x86_64)
-	qemu-system-$(DEFAULT_ARCH) -bios OVMF_$(DEFAULT_ARCH).fd -drive file=Pious.img -d guest_errors -m 2G -debugcon file:uefi_debug.log -global isa-debugcon.iobase=0x402
+	qemu-system-$(DEFAULT_ARCH) -bios OVMF_$(DEFAULT_ARCH).fd -drive file=Pious.img -d guest_errors -m 2G -debugcon file:uefi_debug.log -global isa-debugcon.iobase=0x402 -monitor stdio
 endif
 
 ifeq ($(DEFAULT_ARCH), aarch64)

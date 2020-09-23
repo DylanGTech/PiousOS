@@ -1,11 +1,12 @@
 ENTRY(kernel_main)
 
+HIGHER_HALF = 0xFFFFFFFFC0000000;
 
 SECTIONS
 {
 	/* Begin putting sections at 1 MiB, a conventional place for kernels to be
 	   loaded at by the bootloader. */
-	. = 0x40000000;
+	. = HIGHER_HALF;
  
 	/* Code */
 	.text BLOCK(4K) : ALIGN(4K)

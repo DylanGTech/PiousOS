@@ -42,6 +42,7 @@ typedef struct {
 
 EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG  * Graphics, EFI_CONFIGURATION_TABLE * SysCfgTables, UINTN NumSysCfgTables, UINT32 UEFIVer);
 EFI_STATUS InitUEFI_GOP(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics);
+EFI_STATUS MapVirtualPages(UINTN physical, UINTN virt, UINTN pages, UINT32 flags, EFI_SYSTEM_TABLE * ST);
 
 
 UINT8 VerifyZeroMem(UINT64 NumBytes, UINT64 BaseAddr);

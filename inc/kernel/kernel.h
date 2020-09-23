@@ -25,6 +25,7 @@ typedef union
 
 void InitializeSystem(LOADER_PARAMS* Parameters);
 int16_t CompareMemory(const void * addr1, const void * addr2, uint64_t length);
+void CopyMemory(const void * addr1, const void * addr2, uint64_t length);
 void Abort(uint64_t errorCode);
 
 #endif

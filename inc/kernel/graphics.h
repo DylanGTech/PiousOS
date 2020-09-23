@@ -19,7 +19,7 @@ extern TextDisplaySettings mainTextDisplaySettings;
 void PrintString(unsigned char * str, UINT32 foregroundColor, UINT32 backgroundColor, ...);
 void PrintCharacter(unsigned char chr, UINT32 foregroundColor, UINT32 backgroundColor);
 void ScrollUp();
-void InitializeDisplay();
+void InitializeDisplay(EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE GPU);
 void ColorScreen(UINT32 color);
 
 #ifdef DEBUG_PIOUS

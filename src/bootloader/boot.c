@@ -45,7 +45,6 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
    Status = BootKernel(ImageHandle, Graphics, ST->ConfigurationTable, ST->NumberOfTableEntries, ST->Hdr.Revision);
 
-
    while(1) ;
    return Status;
 }
@@ -55,6 +54,32 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGURATION_TABLE * SysCfgTables, UINTN NumSysCfgTables, UINT32 UEFIVer)
 {
     Print(L"Booting kernel\r\n");
+
+#ifdef x86_64
+  
+  UINT64 reg;
+
+  asm volatile("mov %%cr0, %[dest]"
+      : [dest] "=r" (reg) // Outputs
+      : // Inputs
+      : // Clobbers
+  );
+
+  //Turn off the paging bit if it's on from UEFI
+  if(reg & (1 << 16))
+  {
+      reg ^= (1 << 16);
+      asm volatile("mov %[dest], %%cr0"
+          : // Outputs
+          : [dest] "r" (reg) // Inputs
+          : // Clobbers
+      );
+  }
+
+  
+#elif aarch64
+    //Do anything paging-related here
+#endif
 
 
     EFI_STATUS BootStatus;
@@ -130,6 +155,7 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
     // Default ImageBase for 64-bit PE DLLs
     EFI_PHYSICAL_ADDRESS Header_memory = 0x40000000;
 
+    
     UINTN FileInfoSize = 0;
     EFI_FILE_INFO *FileInfo;
 
@@ -249,16 +275,17 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
         KernelPages = pages;
 
 
-        //EFI_PHYSICAL_ADDRESS AllocatedMemory = 0x400000;
         EFI_PHYSICAL_ADDRESS AllocatedMemory = 0x40000000; // 1 GiB
 
 
         BootStatus = uefi_call_wrapper(BS->AllocatePages, 4, AllocateAddress, EfiLoaderData, pages, &AllocatedMemory);
+
         if(EFI_ERROR(BootStatus))
         {
           Print(L"Could not allocate pages for ELF program segments. Error code: 0x%llx\r\n", BootStatus);
           return BootStatus;
         }
+
 
         // Zero the allocated pages
         ZeroMem((VOID*)AllocatedMemory, (pages << EFI_PAGE_SHIFT));
@@ -498,13 +525,14 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
 
         }
 
+
         // No need to copy headers to memory for ELFs, just the program itself
         // Only want to include PT_LOAD segments
         for(i = 0; i < Numofprogheaders; i++) // Load sections into memory
         {
           Elf64_Phdr *specific_program_header = &program_headers_table[i];
           UINTN RawDataSize = specific_program_header->p_filesz; // 64-bit ELFs can have 64-bit file sizes!
-          EFI_PHYSICAL_ADDRESS SectionAddress = specific_program_header->p_vaddr; // 64-bit ELFs use 64-bit addressing!
+          EFI_PHYSICAL_ADDRESS SectionAddress = AllocatedMemory + (specific_program_header->p_vaddr - program_headers_table[0].p_vaddr); // 64-bit ELFs use 64-bit addressing!
 
           if(specific_program_header->p_type == PT_LOAD)
           {
@@ -518,7 +546,7 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
 
             if(RawDataSize != 0) // Apparently some UEFI implementations can't deal with reading 0 byte sections
             {
-              BootStatus = uefi_call_wrapper(KernelFile->Read, 3, KernelFile, &RawDataSize, (EFI_PHYSICAL_ADDRESS*)SectionAddress); // (void*)SectionAddress
+              BootStatus = uefi_call_wrapper(KernelFile->Read, 3, KernelFile, &RawDataSize, (EFI_PHYSICAL_ADDRESS*)SectionAddress);
               if(EFI_ERROR(BootStatus))
               {
                 Print(L"Program segment read error (ELF). 0x%llx\r\n", BootStatus);
@@ -526,11 +554,9 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
               }
             }
           }
-          else
-          {
-          }
         }
 
+        EFI_PHYSICAL_ADDRESS startAddress = program_headers_table[0].p_vaddr;
         // Done with program_headers_table
         if(program_headers_table)
         {
@@ -547,6 +573,18 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
         KernelBaseAddress = AllocatedMemory;
         Header_memory = ELF64header.e_entry; //AllocatedMemory + ELF64header.e_entry;
 
+        MapVirtualPages(AllocatedMemory, startAddress, pages, 0x3, ST);
+        
+		    //uefi_call_wrapper(ST->BootServices->AllocatePages, 4, AllocateAddress, EfiLoaderData, pages, (UINTN *)startAddress);
+
+        Print(L"FINISHED MAP!!!\r\n");
+        /*
+        asm volatile("mov %[dest], %%cr0"
+            : // Outputs
+            : [dest] "r" (reg ^ (1 << 16)) // Inputs
+            : // Clobbers
+        );
+        */
         // Loaded! On to memorymap and exitbootservices...
         // NOTE: Executable entry point is now defined in Header_memory's contained address, which is AllocatedMemory + ELF64header.e_entry
 
@@ -663,8 +701,8 @@ EFI_STATUS BootKernel(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics, EFI_CONFIGU
   Loader_block->ConfigTables = SysCfgTables;
   Loader_block->Number_of_ConfigTables = NumSysCfgTables;
 
-
 #ifdef x86_64
+
   // Jump to entry point, and WE ARE LIVE!!
   if(KernelisPE)
   {
@@ -1953,4 +1991,70 @@ EFI_STATUS InitUEFI_GOP(EFI_HANDLE ImageHandle, GPU_CONFIG * Graphics)
 
 
   return GOPStatus;
+}
+
+
+
+
+EFI_STATUS MapVirtualPages(UINTN physical, UINTN virt, UINTN pages, UINT32 flags, EFI_SYSTEM_TABLE * ST)
+{
+#ifdef x86_64
+
+  Print(L"Mapping %u pages from 0x%llX to 0x%llX\r\n", pages, physical, virt);
+	UINTN *pml4;
+
+  asm volatile("mov %%cr3, %[dest]"
+      : [dest] "=r" (pml4) // Outputs
+      : // Inputs
+      : // Clobbers
+  );
+
+
+	UINTN pml4i = (virt >> 39) & 0x1FF;
+	UINTN pml3i = (virt >> 30) & 0x1FF;
+	UINTN pml2i = (virt >> 21) & 0x1FF;
+	UINTN pml1i = (virt >> 12) & 0x1FF;
+
+	UINT64 *pml3 = NULL;
+	UINT64 *pml2 = NULL;
+	UINT64 *pml1 = NULL;
+
+	if(!pml4[pml4i]) {
+		uefi_call_wrapper(ST->BootServices->AllocatePages, 4, AllocateAnyPages, EfiLoaderData, 1, (UINTN *) &pml3);
+		ZeroMem(pml3, 0x1000);
+
+		pml4[pml4i] = (UINTN) pml3 | 0x01 | 0x02;
+	} else {
+		pml3 = (UINTN *) (pml4[pml4i] & ~0xFFFUL);
+	}
+
+	if(!pml3[pml3i]) {
+		uefi_call_wrapper(ST->BootServices->AllocatePages, 4, AllocateAnyPages, EfiLoaderData, 1, (UINTN *) &pml2);
+		ZeroMem(pml2, 0x1000);
+
+		pml3[pml3i] = (UINTN) pml2 | 0x01 | 0x02;
+	} else {
+		pml2 = (UINTN *) (pml3[pml3i] & ~0xFFFUL);
+	}
+
+	if(!pml2[pml2i]) {
+		uefi_call_wrapper(ST->BootServices->AllocatePages, 4, AllocateAnyPages, EfiLoaderData, 1, (UINTN *) &pml1);
+		ZeroMem(pml1, 0x1000);
+
+		pml2[pml2i] = (UINTN) pml1 | 0x01 | 0x02;
+	} else {
+		pml1 = (UINTN *) (pml2[pml2i] & ~0xFFFUL);
+	}
+
+	for(UINTN i = 0; i < pages; i++) {
+		pml1[pml1i + i] = (physical + (i << 12)) | flags;
+		asm volatile ("invlpg (%0)" : : "r" (virt + (i << 12)) : "memory");
+
+		if(pml1i + i > 511) {
+			MapVirtualPages(physical + (i << 12), virt + (i << 12), pages - i, flags, ST);
+		}
+	}
+#endif
+
+	return EFI_SUCCESS;
 }

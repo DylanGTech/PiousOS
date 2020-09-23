@@ -20,6 +20,7 @@
 #include "kernel/kernel.h"
 #include "kernel/graphics.h"
 #include "kernel/memory.h"
+#include "kernel/drivers.h"
 
 #define STACK_SIZE (1 << 20)
 
@@ -49,8 +50,10 @@ void kernel_main(LOADER_PARAMS * LP) // Loader Parameters
     InitializeSystem(LP);
 
     PrintString("Hello!\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor);
-    //PrintString("MemMap Address: 0x%lX\nMemMap Size: %lu bytes\nDescriptor Size: %lu bytes\nDescriptor Version: %hu\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor, (unsigned long)mainMemorySettings.memMap, (unsigned long)mainMemorySettings.memMapSize, (unsigned long)mainMemorySettings.memMapDescriptorSize, (unsigned short)mainMemorySettings.memMapDescriptorVersion);
+    PrintString("Stack Address: 0x%lX\n", mainTextDisplaySettings.fontColor, mainTextDisplaySettings.backgroundColor, kernel_stack);
     
+    InitializeDrivers(LP->ConfigTables, LP->Number_of_ConfigTables);
+
     while(1)
     {
 

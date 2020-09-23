@@ -38,7 +38,11 @@ __attribute__((aligned(64))) uint64_t MinimalGDT[5] = {0, 0x00af9a000000ffff, 0x
   ((uint64_t*)MinimalGDT)[4] = tss64_addr >> 32; // TSS is a double-sized entry
 */
 
-__attribute__((aligned(4096))) static uint64_t outermost_table[512] = {0};
+__attribute__((aligned(4096))) static uint64_t pml5_table[512] = {0};
+__attribute__((aligned(4096))) static uint64_t pml4_table[512] = {0};
+__attribute__((aligned(4096))) static uint64_t pdp_table[512] = {0};
+__attribute__((aligned(4096))) static uint64_t pd_table[512] = {0};
+__attribute__((aligned(4096))) static uint64_t page_table[512] = {0};
 
 
 void InitializeSystem(LOADER_PARAMS * Parameters)
@@ -48,9 +52,11 @@ void InitializeSystem(LOADER_PARAMS * Parameters)
 
     InitializeISR();
 
+
+    /*
     uint64_t reg;
     uint64_t reg2;
-
+    uint64_t reg3;
 
     //This disables paging setup by the UEFI firmware. This will give the OS the ability to write its own memory manager
     asm volatile("mov %%cr0, %[dest]"
@@ -71,85 +77,128 @@ void InitializeSystem(LOADER_PARAMS * Parameters)
     }
 
     uint64_t maxRAM = GetMaxMappedPhysicalAddress();
-    uint64_t reg3;
+    //Use 4 KiB Paging
 
-    asm volatile("cpuid"
-       : "=d" (reg) // Outputs
-       : "a" (0x80000001) // Inputs (The value to put into %rax)
-       : "%rbx", "%rcx"// Clobbers
-    );
-
-    if(reg & (1 << 26))
+    if(maxRAM > (1ULL << 57)) //128 PB
     {
-        //Use 1GB Paging
+        //WAY too much RAM
+        //TODO: Error out
+    }
 
-        asm volatile("mov %%cr4, %[dest]"
-            : [dest] "=r" (reg3) // Outputs
-            : // Inputs
-            : // Clobbers
-        );
+    //uint16_t maxPML5Entry = 1; // Always at least 1 entry
 
-        if(maxRAM > (1ULL << 57)) //128 PB
+    //uint16_t lastPML5Max = 1; // Always at least 1 entry
+    uint16_t maxPML4Entry = 512;
+
+    uint16_t lastPDPMax = 1; // Always at least 1 entry
+    uint16_t maxPDPEntry = 512;
+
+    uint16_t lastPDMax = 1; // Always at least 1 entry
+    uint16_t maxPDEntry = 512;
+
+    uint16_t lastPTMax = 512; // This will decrease to the correct size, but worst-case it will be 512 and account for exactly 512GB RAM
+    uint16_t maxPTEntry = 512;
+
+
+
+    //while(maxRAM > (256ULL << 40))
+    //{
+    //    maxPML5Entry++;
+    //    maxRAM -= (256ULL << 40);
+    //}
+
+    //if(maxPML5Entry > 512)
+    //{
+    //    maxPML5Entry = 512; //Cap it if there is an insane amount of RAM available
+    //}
+
+    if(maxRAM)
+    {
+        while(maxRAM > (512ULL << 30))
         {
-            //WAY too much RAM
-            //TODO: Error out
+            maxPML4Entry++;
+            maxRAM -= (512ULL << 30);
         }
 
-        uint64_t maxPML5Entry = 1; // Always at least 1 entry
-
-        uint64_t lastPML5Max = 1; // Always at least 1 entry
-        uint64_t maxPML4Entry = 512;
-
-        uint64_t lastPDPMax = 512; // This will decrease to the correct size, but worst-case it will be 512 and account for exactly 512GB RAM
-        uint64_t maxPDPEntry = 512;
-
-        while(maxRAM > (256ULL << 40))
+        if(maxPML4Entry > 512)
         {
-            maxPML5Entry++;
-            maxRAM -= (256ULL << 40);
+            maxPML4Entry = 512; //Cap it if there is an enourmous amount of RAM available
         }
-
-        if(maxPML5Entry > 512)
-        {
-            maxPML5Entry = 512; //Cap it if there is an insane amount of RAM available
-        }
-
+        
         if(maxRAM)
         {
-            while(maxRAM > (512ULL << 30))
+            while(maxRAM > (1ULL << 30))
             {
-                maxPML5Entry++;
-                maxRAM -= (512ULL << 30);
+                maxPDPEntry++;
+                maxRAM -= (1ULL << 30);
             }
 
-            if(maxPML4Entry > 512)
+            if(maxPDPEntry > 512)
             {
-                maxPML4Entry = 512; //Cap it if there is an enourmous amount of RAM available
+                maxPDPEntry = 512; //Cap it if there is an enourmous amount of RAM available
             }
 
             if(maxRAM)
             {
-                //Final table may not be full
-                lastPDPMax = ( (maxRAM + ((1 << 30) - 1)) & (~0ULL << 30) ) >> 30; // Catch any extra RAM into one more page
-
-                if(lastPDPMax > 512) // Extreme case RAM size truncation
+                while(maxRAM > (2ULL << 20))
                 {
-                    lastPDPMax = 512;
+                    maxPDEntry++;
+                    maxRAM -= (1ULL << 20);
+                }
+
+                if(maxPDEntry > 512)
+                {
+                    maxPDEntry = 512; //Cap it if there is an enourmous amount of RAM available
+                }
+
+                if(maxRAM)
+                {
+                    lastPTMax = ( (maxRAM + ((4 << 10) - 1)) & (~0ULL <<  10) ) >> 10; // Catch any extra RAM into one more page
                 }
             }
         }
-
-        // Now we have everything we need to know how much space the page tables are going to consume
-        uint64_t pml4_space = PAGE_TABLE_SIZE*maxPML5Entry;
-        uint64_t pdp_space = pml4_space*maxPML4Entry;
-
-        asm volatile("mov %[dest], %%cr4"
-            : // Outputs
-            : [dest] "r" (reg3) // Inputs
-            : // Clobbers
-        );
     }
 
+
+    asm volatile("mov %%cr3, %[dest]"
+        : [dest] "=r" (reg3) // Outputs
+        : // Inputs
+        : // Clobbers
+    );
+
+    
+    //Setup blank PML4 table
+    for(uint16_t i = 0; i < 512; i++)
+    {
+        //Set all of their entries to "not present" to avoid wasting resources for mapping ALL memory using tables
+        pml5_table[i] = 0x0000000000000002;
+        pml4_table[i] = 0x0000000000000002;
+        pdp_table[i] = 0x0000000000000002;
+        pd_table[i] = 0x0000000000000002;
+    }
+
+    // supervisor level, read/write, present
+    pml5_table[0] = ((uint64_t)pml4_table) | 3;
+    pml4_table[0] = ((uint64_t)pdp_table) | 3;
+    pdp_table[0] = ((uint64_t)pd_table) | 3;
+    pd_table[0] = ((uint64_t)page_table) | 3;
+
+
+    //TODO: Set up higher-half kernel and utilize the tables. Each process neads their own set of page tables
+
+
+    asm volatile("mov %[dest], %%cr3"
+        : // Outputs
+        : [dest] "m" (pml4_table) // Inputs
+        : // Clobbers
+    );
+
+    asm volatile("mov %[dest], %%cr0"
+        : // Outputs
+        : [dest] "r" (reg + (1 << 7)) // Inputs
+        : // Clobbers
+    );
+    */
 #ifdef DEBUG_PIOUS
     PrintDebugMessage("System Initialized\n");
 #endif
@@ -175,4 +224,16 @@ int16_t CompareMemory(const void * addr1, const void * addr2, uint64_t length)
             return *((uint8_t *)addr2) - *((uint8_t *)addr1);
     }
     return 0;
+}
+
+
+//TODO: Use hardware acceration
+void CopyMemory(const void * addr1, const void * addr2, uint64_t length)
+{
+    for(; length > 0; length--)
+    {
+        *((uint8_t *)addr1) = *((uint8_t *)addr2);
+        addr1++;
+        addr2++;
+    }
 }
